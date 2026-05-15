@@ -205,8 +205,8 @@
         
         /* 🔥 详细记录里两人对战的头像修改处 🔥 */
         #match-log-list .log-avatar { 
-            width: 120px; 
-            height: 65px; 
+            width: 80px; 
+            height: 40px; 
             border-radius: 8px; 
             object-fit: cover; 
             object-position: center 18%; 
@@ -214,6 +214,7 @@
         }
 
         .log-crown { position: absolute; top: -12px; right: -8px; font-size: 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));}
+.log-lose-overlay { position: absolute; top: 5%; left: 30%; transform: translate(-50%, -50%); font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 900;opacity: 0.5; color: white); text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 5px rgba(0,0,0,1); letter-spacing: 2px; z-index: 5; pointer-events: none; }
         .log-tags { position: absolute; bottom: -8px; display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; width: 120%;}
         .match-tag { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.8);}
         .tag-first { background: #ff9a9e; color: #000; } 
@@ -775,19 +776,52 @@
                 let isP1Win = m.winner === p1.id;
                 let formatTime = m.duration > 0 ? `${Math.floor(m.duration/60)}分${m.duration%60}秒` : '--';
                 
-                let tagHtml = '';
-                if(m.wTags) m.wTags.forEach(t => tagHtml += `<div class="match-tag ${t==='首胜'?'tag-first':(t==='终结红名'?'tag-break':(t==='清台'||t==='剃头'?'tag-break':'tag-streak'))}">${t}</div>`);
-                if(m.lTags) m.lTags.forEach(t => tagHtml += `<div class="match-tag tag-lose">${t}</div>`);
+// 新增逻辑：将胜利标签和失败标签分开，各自显示在对应的人旁边
+                let wTagHtml = ''; let lTagHtml = '';
+                if(m.wTags) m.wTags.forEach(t => wTagHtml += `<div class="match-tag ${t==='首胜'?'tag-first':(t==='终结红名'?'tag-break':(t==='清台'||t==='剃头'?'tag-break':'tag-streak'))}">${t}</div>`);
+                if(m.lTags) m.lTags.forEach(t => lTagHtml += `<div class="match-tag tag-lose">${t}</div>`);
+                
+                let p1Tags = isP1Win ? wTagHtml : lTagHtml;
+                let p2Tags = !isP1Win ? wTagHtml : lTagHtml;
 
-                return `
+return `
                     <div class="match-log-item">
                         <div class="log-num">#${m.realId}</div>
                         <div class="log-vs">
-                            <div class="log-avatar-wrap"><img src="${p1.avatar}" class="log-avatar" style="${!isP1Win?'filter:grayscale(100%);':''} border-color:${p1.color};">${isP1Win?'<div class="log-crown">👑</div>':''}<div class="log-tags">${isP1Win?tagHtml:''}</div></div>
-                            <span style="font-size:12px;color:#555;">VS</span>
-                            <div class="log-avatar-wrap"><img src="${p2.avatar}" class="log-avatar" style="${isP1Win?'filter:grayscale(100%);':''} border-color:${p2.color};">${!isP1Win?'<div class="log-crown">👑</div>':''}<div class="log-tags">${!isP1Win?tagHtml:''}</div></div>
+                            <!-- 左侧玩家 P1 -->
+                            <div style="display:flex; align-items:center; justify-content:flex-end; flex:1; min-width:0; gap:5px;">
+                                <!-- P1 标签 (放最左侧) -->
+                                <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-end;">${p1Tags}</div>
+                                <!-- P1 头像与名字垂直居中对齐组合 (确保名字永远在头像X轴正中间) -->
+                                <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                                    <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+                                        <img src="${p1.avatar}" class="log-avatar" style="width:90px; height:50px; ${!isP1Win?'filter:grayscale(100%);':''} border-color:${p1.color}; margin:0;">
+                                        ${isP1Win?'<div class="log-crown" style="top:-10px; right:-6px; font-size:16px;">👑</div>':'<div class="log-lose-overlay" style="font-size:20px;">LOSE</div>'}
+                                    </div>
+                                    <div style="font-size:12px; font-weight:bold; color:${isP1Win?'#fff':'#666'}; margin-top:5px; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;">${p1.name}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 中间 VS 与 耗时 (时间放在VS正上方) -->
+                            <div style="display:flex; flex-direction:column; align-items:center; margin:0 8px; flex-shrink:0;">
+                                <div style="font-size:16px; color:white21:42 2026/5/15; font-family:'Oswald', sans-serif; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:10px; margin-bottom:4px; border:1px solid #333;">${formatTime}</div>
+                                <div style="font-size:14px; color:white; font-weight:900; font-family:'Oswald', sans-serif; letter-spacing:1px;">VS</div>
+                            </div>
+                            
+                            <!-- 右侧玩家 P2 -->
+                            <div style="display:flex; align-items:center; justify-content:flex-start; flex:1; min-width:0; gap:5px;">
+                                <!-- P2 头像与名字垂直居中对齐组合 (确保名字永远在头像X轴正中间) -->
+                                <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                                    <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+                                        <img src="${p2.avatar}" class="log-avatar" style="width:90px; height:50px; ${isP1Win?'filter:grayscale(100%);':''} border-color:${p2.color}; margin:0;">
+                                        ${!isP1Win?'<div class="log-crown" style="top:-10px; right:-6px; font-size:16px;">👑</div>':'<div class="log-lose-overlay" style="font-size:20px;">LOSE</div>'}
+                                    </div>
+                                    <div style="font-size:12px; font-weight:bold; color:${!isP1Win?'#fff':'#666'}; margin-top:5px; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;">${p2.name}</div>
+                                </div>
+                                <!-- P2 标签 (放最右侧) -->
+                                <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start;">${p2Tags}</div>
+                            </div>
                         </div>
-                        <div class="log-time">${formatTime}</div>
                     </div>`;
             }).join('');
         }
