@@ -894,14 +894,49 @@
             appData.matches = []; appData.currentMatchStartTime = null; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("战绩已全面重置！");
         }
         
-        function joinRoom() { let r = document.getElementById('room-input').value.trim(); if(r && r!==appData.roomId) { appData.roomId=r; saveLocalAndSync(); connectMqtt(); updateAllUI(); } }
-        function connectMqtt() {
+function joinRoom() { 
+            let r = document.getElementById('room-input').value.trim(); 
+            if(r && r !== appData.roomId) { 
+                appData.roomId = r; 
+                // ✨核心修复1：把自己的时间清零，强制接受房间里其他人的数据包
+                appData.timestamp = 0; 
+                document.getElementById('ui-room-id').innerText = r;
+                localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
+                // ✨核心修复2：传入 true，代表自己是“新来的”，要主动向房间里索要数据，而不是广播
+                connectMqtt(true); 
+                updateAllUI(); 
+            } 
+        }
+
+        function connectMqtt(isJoining = false) {
             if(mqttClient) mqttClient.end();
             document.getElementById('mqtt-status').innerHTML = '🟡 连接中';
             mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-            mqttClient.on('connect', () => { document.getElementById('mqtt-status').innerHTML = '<span style="color:var(--cy-cyan);">🟢 联机成功</span>'; mqttClient.subscribe(`esports_pool_game_ult_v4_${appData.roomId}`); broadcastState(); });
+            mqttClient.on('connect', () => { 
+                document.getElementById('mqtt-status').innerHTML = '<span style="color:var(--cy-cyan);">🟢 联机成功</span>'; 
+                mqttClient.subscribe(`esports_pool_game_ult_v4_${appData.roomId}`); 
+                if (isJoining) {
+                    // 如果自己是刚连进别人的房间，就发送一条“请求同步”的信号
+                    mqttClient.publish(`esports_pool_game_ult_v4_${appData.roomId}`, JSON.stringify({ type: 'request_sync' }));
+                } else {
+                    // 如果是自己建房或者刷新页面，才正常广播自己的状态
+                    broadcastState(); 
+                }
+            });
             mqttClient.on('message', (t, msg) => {
-                try { let inc = JSON.parse(msg.toString()); if(inc.timestamp > appData.timestamp) { appData = inc.data; localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); updateAllUI(); updateDispatchBtnUI(); } } catch(e){}
+                try { 
+                    let inc = JSON.parse(msg.toString()); 
+                    if (inc.type === 'request_sync') {
+                        // ✨核心修复3：听到别人要数据，立刻把自己的最新数据广播给他
+                        broadcastState();
+                    } else if (inc.data && inc.timestamp > appData.timestamp) { 
+                        // 正常接收数据更新
+                        appData = inc.data; 
+                        localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
+                        updateAllUI(); 
+                        updateDispatchBtnUI(); 
+                    } 
+                } catch(e){}
             });
             mqttClient.on('close', () => document.getElementById('mqtt-status').innerHTML = '🔴 离线');
         }
