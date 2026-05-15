@@ -41,11 +41,11 @@
         input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #111; color: var(--cy-cyan); margin-top: 5px; outline: none; font-weight: bold; }
 
         /* ==================================================
-           【页面一：核心赛场 - 对战玩家大卡片头像裁剪区】1
+           【页面一：核心赛场 - 对战玩家大卡片头像裁剪区】
            请在 F12 的 Elements 结构树中，层层点开直到选中 <img> 标签！
            或者直接修改下方的 object-position 数值，保存刷新即可生效。
         ================================================== */
-        .battle-arena { display: flex; height: 340px; gap: 8px; margin-bottom: 20px; align-items: stretch; }
+        .battle-arena { display: flex; height: 450px; gap: 8px; margin-bottom: 20px; align-items: stretch; }
         .combatant-outer { flex: 1; display: flex; flex-direction: column; background:#000; border-radius: 6px; overflow:hidden;}
         .combatant { position: relative; height: 100%; display: flex; flex-direction: column; }
         .c-img-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
@@ -65,7 +65,7 @@
         .c-score { font-size: 36px; font-weight: bold; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5); line-height: 1; margin-bottom: 10px; font-family: 'Oswald'; }
         .streak-label { position: absolute; top: 0; left: 0; width: 100%; background: var(--glow-color); color: #000; text-align: center; font-size: 14px; font-weight: 900; padding: 6px 0; z-index: 3; box-shadow: 0 2px 10px var(--glow-color); }
         .vs-center { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40px; z-index: 10; margin: 0 -15px; }
-        .vs-text { font-size: 32px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
+        .vs-text { font-size: 60px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
 
         /* ==================================================
            【页面一：赛场 - 候补席头像裁剪区】
@@ -95,8 +95,8 @@
         ================================================== */
         .rank-card-outer { margin-bottom: 15px; border-radius: 6px; background: rgba(15,20,30,0.9); }
         /* 移除外层卡片的呼吸动画，仅保留发光 */
-        .rank-inner { display: flex; height: 110px; position: relative;}
-        .rank-left { width: 110px; position: relative; flex-shrink: 0;}
+        .rank-inner { display: flex; height: 140px; position: relative;}
+        .rank-left { width: 100px; position: relative; flex-shrink: 0;}
         
         /* 🔥 风云榜左侧玩家头像修改处 🔥 */
         #stats-list .rank-left img { 
@@ -115,11 +115,11 @@
         
         .rank-right { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
         .rank-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .rank-name-box { font-size: 18px; font-weight: 900; color: #fff; }
-        .rank-score-box { font-size: 28px; color: var(--cy-yellow); font-family: 'Oswald'; line-height: 1;}
-        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 11px; font-weight: bold; }
+        .rank-name-box { font-size: 30px; font-weight: 900; color: #fff; }
+        .rank-score-box { font-size: 40px; color: var(--cy-yellow); font-family: 'Oswald'; line-height: 1;}
+        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 16px; font-weight: bold; }
         .stat-badge { padding: 3px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); }
-        .date-footer-text { text-align: center; color: #888; font-size: 12px; margin-top: 20px; font-weight: bold;}
+        .date-footer-text { text-align: center; color: #888; font-size: 15px; margin-top: 20px; font-weight: bold;}
 
         /* ==================================================
            【页面三：荣誉殿堂 - 成就头像裁剪区】
@@ -382,7 +382,7 @@
         <div class="modal-box">
             <h3 style="color:var(--cy-yellow); margin-bottom: 5px;">自由派遣：指定下一场阵容</h3>
             <select id="manual-p1" class="dispatch-select"></select>
-            <div style="font-weight:900; color:var(--cy-pink); font-size:24px; margin: 10px 0;">VS</div>
+            <div style="font-weight:900; color:var(--cy-pink); font-size:60px; margin: 10px 0;">VS</div>
             <select id="manual-p2" class="dispatch-select"></select>
             <div class="modal-btn-group"><button class="btn-prime" onclick="confirmManualDispatch()">开始这局</button></div>
         </div>
