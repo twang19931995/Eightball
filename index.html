@@ -842,7 +842,7 @@ return `
             tbody.innerHTML = html || '<tr><td colspan="4" style="color:#666;">暂无对战数据</td></tr>';
         }
 
-        function exportExcel() {
+function exportExcel() {
             if(typeof XLSX === 'undefined') return alert("Excel 组件加载中，请稍后。");
             let wb = XLSX.utils.book_new();
             
@@ -859,7 +859,22 @@ return `
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pData), "积分排行");
 
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["!! 请勿修改此表内容，用于系统一键还原 !!"], [JSON.stringify(appData)]]), "SYSTEM_BACKUP");
-            XLSX.writeFile(wb, "赛博台球大师_赛事档案.xlsx");
+            
+            // ----------------------------------------------------
+            // 新增逻辑：动态生成“黑八数据-XX（年）-XX（月）-XX（日）-XX局”的文件名
+            // ----------------------------------------------------
+            let now = new Date();
+            let yyyy = now.getFullYear();
+            // 月份和日期如果是个位数，自动在前面补0 (例如 5月 变成 05)
+            let mm = String(now.getMonth() + 1).padStart(2, '0');
+            let dd = String(now.getDate()).padStart(2, '0');
+            let totalMatches = appData.matches.length; // 自动获取当前打了多少局
+            
+            // 拼接出最终的文件名格式
+            let exportFilename = `黑八数据-${yyyy}-${mm}-${dd}-${totalMatches}局.xlsx`;
+            
+            // 导出并下载文件
+            XLSX.writeFile(wb, exportFilename);
         }
 
         function importExcel(event) {
