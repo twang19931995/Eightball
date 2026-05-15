@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>赛博台球大师 - 终极静态高光版</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --cy-cyan: #00f3ff; --cy-pink: #ff00ea; --cy-yellow: #fcee0a; 
+            --cy-red: #ff2a2a; --cy-green: #00ff66; --cy-dark: #090a0f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans SC', sans-serif; user-select: none; }
+        body { background-color: var(--cy-dark); background-image: radial-gradient(circle at 50% 0%, #171d33 0%, var(--cy-dark) 60%); color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ==================================================
+           【全局静态高光机制】 (已移除呼吸灯动画)
+           供所有需要发光的玩家卡片使用
+        ================================================== */
+        .static-neon-glow {
+            border: 2px solid var(--glow-color);
+            box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px var(--glow-color);
+        }
+
+        .premium-panel { background: linear-gradient(135deg, rgba(16, 20, 30, 0.95), rgba(25, 30, 45, 0.85)); border-top: 2px solid var(--cy-cyan); border-bottom: 2px solid var(--cy-pink); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 2px 15px rgba(0, 243, 255, 0.1); border-radius: 4px; padding: 15px; margin-bottom: 15px; backdrop-filter: blur(10px); }
+        .title-glow { font-weight: 900; text-align: center; margin-bottom: 20px; font-size: 24px; background: linear-gradient(90deg, var(--cy-cyan), var(--cy-pink)); -webkit-background-clip: text; color: transparent; letter-spacing: 3px; text-shadow: 0px 4px 20px rgba(255,0,234,0.4); }
+        .page-container { flex: 1; overflow-y: auto; padding: 15px 15px 90px 15px; display: none; animation: fadeIn 0.4s forwards; }
+        .page-container.active { display: block; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+        .number-font { font-family: 'Oswald', sans-serif; }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.6); border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
+        .action-btns button { background: linear-gradient(180deg, #2a2a35, #1a1a24); border: 1px solid #444; color: #ccc; padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+        .action-btns button:active { background: var(--cy-cyan); color: #000; }
+        .action-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+        button.btn-prime { background: linear-gradient(90deg, #00d2ff, #3a7bd5); border: none; color: #fff; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; font-size: 16px; transition: 0.2s; }
+        button.btn-prime:active { transform: scale(0.98); }
+        input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #111; color: var(--cy-cyan); margin-top: 5px; outline: none; font-weight: bold; }
+
+        /* ==================================================
+           【页面一：核心赛场 - 对战玩家大卡片头像裁剪区】
+           请在 F12 的 Elements 结构树中，层层点开直到选中 <img> 标签！
+           或者直接修改下方的 object-position 数值，保存刷新即可生效。
+        ================================================== */
+        .battle-arena { display: flex; height: 340px; gap: 8px; margin-bottom: 20px; align-items: stretch; }
+        .combatant-outer { flex: 1; display: flex; flex-direction: column; background:#000; border-radius: 6px; overflow:hidden;}
+        .combatant { position: relative; height: 100%; display: flex; flex-direction: column; }
+        .c-img-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* 🔥 赛场主头像修改处 🔥 */
+        #play-area .c-img-wrapper img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            /* 重点修改这里：center 20% 代表左右居中，上下偏上20%对准脸部 */
+            object-position: center 20%; 
+            filter: contrast(1.1); 
+        }
+
+        .c-info-layer { position: relative; z-index: 2; margin-top: auto; padding: 15px 10px; background: linear-gradient(to top, rgba(0,0,0,1) 10%, rgba(0,0,0,0.7) 60%, transparent); display: flex; flex-direction: column; align-items: center; }
+        .c-name { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px #000; margin-bottom: 2px; }
+        .c-score { font-size: 36px; font-weight: bold; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5); line-height: 1; margin-bottom: 10px; font-family: 'Oswald'; }
+        .streak-label { position: absolute; top: 0; left: 0; width: 100%; background: var(--glow-color); color: #000; text-align: center; font-size: 14px; font-weight: 900; padding: 6px 0; z-index: 3; box-shadow: 0 2px 10px var(--glow-color); }
+        .vs-center { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40px; z-index: 10; margin: 0 -15px; }
+        .vs-text { font-size: 32px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
+
+        /* ==================================================
+           【页面一：赛场 - 候补席头像裁剪区】
+        ================================================== */
+        .queue-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; }
+        .q-item { position: relative; width: 75px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        /* 🔥 候补席小头像修改处 🔥 */
+        #queue-list .q-avatar { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            object-position: top; 
+            border: 2px solid #555; 
+        }
+
+        .q-item.is-resting .q-avatar { filter: grayscale(100%) opacity(0.4); border-color: #333; }
+        .q-item.is-resting .q-name { color: #666; text-decoration: line-through; }
+        .q-name { font-size: 12px; font-weight: bold; margin-top: 5px; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rest-btn { margin-top: 5px; font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #222; color: #aaa; cursor: pointer; border:1px solid #444;}
+        .q-item.is-resting .rest-btn { background: #442222; color: #ff5555; border-color:#ff5555;}
+        .timer-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--cy-cyan); margin-bottom: 15px; box-shadow: 0 0 15px rgba(0,243,255,0.2); }
+
+        /* ==================================================
+           【页面二：风云榜 - 玩家头像专属颜色描边区】
+        ================================================== */
+        .rank-card-outer { margin-bottom: 15px; border-radius: 6px; background: rgba(15,20,30,0.9); }
+        /* 移除外层卡片的呼吸动画，仅保留发光 */
+        .rank-inner { display: flex; height: 110px; position: relative;}
+        .rank-left { width: 110px; position: relative; flex-shrink: 0;}
+        
+        /* 🔥 风云榜左侧玩家头像修改处 🔥 */
+        #stats-list .rank-left img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            object-position: center 10%; 
+            border-top-left-radius: 4px; 
+            border-bottom-left-radius: 4px;
+            /* 描边颜色由内联样式 style="border-color:..." 动态控制，这里不要写死 border-color */
+            border-right: none; /* 让右边融入卡片 */
+        }
+        
+        /* 排名数字角标 */
+        .rank-num { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); font-size: 20px; font-weight: 900; padding: 2px 8px; border-bottom-right-radius: 8px; font-family: 'Oswald'; }
+        
+        .rank-right { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+        .rank-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .rank-name-box { font-size: 18px; font-weight: 900; color: #fff; }
+        .rank-score-box { font-size: 28px; color: var(--cy-yellow); font-family: 'Oswald'; line-height: 1;}
+        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; font-size: 11px; font-weight: bold; }
+        .stat-badge { padding: 3px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+        .date-footer-text { text-align: center; color: #888; font-size: 12px; margin-top: 20px; font-weight: bold;}
+
+        /* ==================================================
+           【页面三：荣誉殿堂 - 成就头像裁剪区】
+        ================================================== */
+        .achieve-list-container { display: flex; flex-direction: column; gap: 12px; }
+        .ach-card-outer { border-radius: 8px; background: rgba(10, 15, 25, 0.95); }
+        .ach-card { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px; }
+        .ach-left-icon { font-size: 40px; width: 50px; text-align: center; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); flex-shrink: 0;}
+        .ach-mid-info { flex: 1; padding: 0 10px; display: flex; flex-direction: column; justify-content: center; }
+        .ach-title { font-size: 15px; font-weight: 900; margin-bottom: 2px; color: var(--cy-cyan); text-shadow: 0 0 5px rgba(0,243,255,0.5);}
+        .ach-player { font-size: 16px; font-weight: bold; color: #fff; }
+        .ach-val { font-size: 14px; color: var(--cy-yellow); font-family: 'Oswald'; margin-left: 10px;}
+        .ach-desc { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.3; }
+        .ach-right-avatar { width: 60px; height: 60px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid #555; }
+        
+        /* 🔥 荣誉殿堂右侧头像修改处 🔥 */
+        #achieve-list .ach-right-avatar img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            object-position: top; 
+        }
+        
+        .achieve-disabled { border: 1px solid #333 !important; box-shadow: none !important; background: rgba(10,10,15,0.6); }
+        .achieve-disabled .ach-title, .achieve-disabled .ach-player, .achieve-disabled .ach-val, .achieve-disabled .ach-desc { color: #555; text-shadow:none;}
+        .achieve-disabled .ach-left-icon { filter: grayscale(100%) opacity(0.2); }
+        .achieve-disabled .ach-right-avatar img { display: none; }
+
+        /* ==================================================
+           【页面四：宿命恩怨簿 - 头像裁剪区】
+        ================================================== */
+        .player-h2h-section { background: rgba(0,0,0,0.6); border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 2px solid var(--player-color); box-shadow: 0 0 15px var(--player-color); }
+        .h2h-owner { display: flex; align-items: center; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        
+        /* 🔥 恩怨簿主视角大头像修改处 🔥 */
+        #h2h-list .h2h-owner img { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 8px; 
+            margin-right: 15px; 
+            border: 2px solid var(--player-color); 
+            object-fit: cover; 
+            object-position: center 20%; 
+            box-shadow: 0 0 10px var(--player-color);
+        }
+
+        .h2h-owner-info { flex: 1; }
+        .h2h-owner-name { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .h2h-owner-stats { font-size: 11px; color: #aaa; margin-top: 4px; font-weight: bold;}
+        .h2h-owner-score { font-size: 28px; color: var(--cy-yellow); font-family: 'Oswald'; font-weight: bold;}
+        
+        .h2h-opponent-row { display: flex; align-items: center; padding: 12px; border-bottom: 1px dashed #333; }
+        .h2h-opponent-row:last-child { border-bottom: none; }
+        .h2h-bar-container { flex: 1; }
+        .h2h-bar-names { display: flex; justify-content: flex-end; font-size: 18px; color: #fff; font-weight: 900; margin-bottom: 6px; letter-spacing: 1px;}
+        .h2h-bar-wrap { width: 100%; height: 10px; background: #1a1a1a; border-radius: 5px; display: flex; overflow: hidden; }
+        .h2h-bar-left { height: 100%; background: var(--player-color); }
+        .h2h-bar-right { height: 100%; background: #444; }
+        .h2h-vs-stats { font-size: 12px; font-weight: bold; font-family: 'Oswald'; display: flex; justify-content: space-between; margin-top: 4px; color: #ccc;}
+        
+        /* 🔥 恩怨簿右侧对手小头像修改处 🔥 */
+        #h2h-list .h2h-opp-img { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 6px; 
+            border: 1px solid #555; 
+            object-fit: cover; 
+            object-position: top; 
+            margin-left: 15px;
+        }
+
+        /* ==================================================
+           【页面五：详情 - 对战记录与表格】
+        ================================================== */
+        .sub-tabs { display: flex; margin-bottom: 15px; background: #111; border-radius: 6px; overflow: hidden;}
+        .sub-tab-btn { flex: 1; padding: 10px; text-align: center; font-weight: bold; color: #666; cursor: pointer; transition: 0.3s;}
+        .sub-tab-btn.active { background: var(--cy-cyan); color: #000; }
+        
+        .match-log-item { background: rgba(255,255,255,0.05); border-left: 3px solid var(--cy-pink); padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; }
+        .log-num { font-family: 'Oswald'; font-size: 20px; color: var(--cy-yellow); width: 45px; }
+        .log-vs { flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .log-avatar-wrap { position: relative; display: flex; flex-direction: column; align-items: center;}
+        
+        /* 🔥 详细记录里两人对战的头像修改处 🔥 */
+        #match-log-list .log-avatar { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            object-position: center 20%; 
+            border:1px solid #444;
+        }
+
+        .log-crown { position: absolute; top: -12px; right: -8px; font-size: 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));}
+        .log-tags { position: absolute; bottom: -8px; display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; width: 120%;}
+        .match-tag { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: bold; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+        .tag-first { background: #ff9a9e; color: #000; } 
+        .tag-streak { background: var(--cy-cyan); color: #000; } 
+        .tag-lose { background: #555; color: #fff; } 
+        .tag-break { background: var(--cy-red); color: #fff; border: 1px solid #fff;} 
+
+        .log-time { font-size: 14px; color: #aaa; text-align: right; width: 70px; font-family: 'Oswald';}
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: center; background: rgba(0,0,0,0.4); }
+        .schedule-table th { background: var(--cy-cyan); color: #000; padding: 10px 5px; font-weight: bold; border: 1px solid #333; }
+        .schedule-table td { padding: 10px 5px; border: 1px solid #333; color: #ddd; font-family: 'Oswald', sans-serif;}
+
+        /* 底部导航与弹窗 */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; display: flex; justify-content: space-around; align-items: center; background: rgba(10, 10, 15, 0.95); border-top: 1px solid #222; backdrop-filter: blur(10px); z-index: 100;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 10px; font-weight: bold; transition: 0.3s; width: 16%; }
+        .nav-item.active { color: var(--cy-cyan); transform: translateY(-2px); text-shadow: 0 0 8px rgba(0,243,255,0.5); }
+        .nav-icon { font-size: 18px; margin-bottom: 2px; }
+
+        .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-box { width: 85%; max-width: 340px; background: rgba(15,20,30,1); border: 1px solid var(--cy-cyan); border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 10px 40px rgba(0,243,255,0.2); }
+        .modal-btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .dispatch-select { background: #000; border: 1px solid var(--cy-pink); color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="font-size: 12px; font-weight: bold;">联机房间: <span id="ui-room-id" style="color:var(--cy-yellow);">----</span></div>
+        <div class="action-btns">
+            <button id="btn-undo" onclick="undo()" disabled>◀ 撤回</button>
+            <button id="btn-redo" onclick="redo()" disabled>恢复 ▶</button>
+        </div>
+        <div id="mqtt-status" style="font-size: 11px; font-weight:bold;">🔴 离线</div>
+    </div>
+    
+    <div id="page-play" class="page-container active">
+        <h2 class="title-glow">核心赛场</h2>
+        <div class="timer-header">
+            <div class="game-num" id="current-game-num">第 1 局</div>
+            <div class="timer-display" id="match-timer-display">00:00</div>
+            <button class="timer-btn" id="btn-start-timer" onclick="startTimer()">开始计时</button>
+        </div>
+        <div id="play-area"></div>
+        <div class="premium-panel" style="padding: 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                <h4 style="font-size: 14px; color: var(--cy-cyan);">📋 候补与休息序列</h4>
+            </div>
+            <div class="queue-scroll" id="queue-list"></div>
+        </div>
+    </div>
+
+    <div id="page-stats" class="page-container">
+        <h2 class="title-glow">战绩风云榜</h2>
+        <div style="text-align: right; margin-bottom: 10px; font-size: 11px; color: var(--cy-red);">[ 警告 ] 积分垫底者负责结账</div>
+        <div id="stats-list"></div>
+        <div id="last-match-date" style="text-align: center; color: #888; font-size: 12px; margin-top: 20px; font-weight: bold;">截止 --年--月--日</div>
+    </div>
+
+    <div id="page-achieve" class="page-container">
+        <h2 class="title-glow" style="color:var(--cy-yellow); background:none; text-shadow:0 0 15px rgba(252,238,10,0.6); -webkit-text-fill-color: var(--cy-yellow);">荣誉殿堂</h2>
+        <div class="achieve-list-container" id="achieve-list"></div>
+    </div>
+
+    <div id="page-h2h" class="page-container">
+        <h2 class="title-glow">宿命恩怨簿</h2>
+        <div id="h2h-list"></div>
+    </div>
+
+    <div id="page-details" class="page-container">
+        <h2 class="title-glow" style="color:var(--cy-green); background:none; -webkit-text-fill-color: var(--cy-green);">对局数据中心</h2>
+        <div class="sub-tabs">
+            <div class="sub-tab-btn active" id="tab-btn-log" onclick="switchDetailTab('log')">📜 详细记录</div>
+            <div class="sub-tab-btn" id="tab-btn-schedule" onclick="switchDetailTab('schedule')">📅 日程表格</div>
+        </div>
+        <div id="view-match-log">
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-prime" style="padding:8px; font-size:14px; background:#222; border:1px solid var(--cy-cyan); color:var(--cy-cyan);" onclick="toggleSort('id')">按局数排序 ↕</button>
+                <button class="btn-prime" style="padding:8px; font-size:14px; background:#222; border:1px solid var(--cy-cyan); color:var(--cy-cyan);" onclick="toggleSort('time')">按耗时排序 ↕</button>
+            </div>
+            <div id="match-log-list"></div>
+        </div>
+        <div id="view-match-schedule" style="display:none;">
+            <table class="schedule-table">
+                <thead><tr><th>日期</th><th>局数</th><th>总耗时</th><th>场均时间</th></tr></thead>
+                <tbody id="schedule-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="page-settings" class="page-container">
+        <h2 class="title-glow">系统设置</h2>
+        <div class="premium-panel">
+            <label style="color:var(--cy-cyan); font-weight:bold; font-size:14px;">🌐 网络同步</label>
+            <div style="display:flex; gap:10px; margin-top:10px;"><input type="text" id="room-input" placeholder="输入4位数字房间号"><button class="btn-prime" onclick="joinRoom()" style="width: 80px; padding: 10px;">连接</button></div>
+        </div>
+        <div class="premium-panel">
+            <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">🛠️ 赛制派遣模式设定</label>
+            <p style="font-size:10px; color:#888; margin-top:5px;">自动补位：胜者守擂，败者下场自动换人。<br>自由派遣：每局结束后手动指派任意两人上桌。</p>
+            <button id="btn-dispatch-mode" class="btn-prime" style="margin-top:10px; background:#1a1a24; border:1px solid var(--cy-yellow); color:var(--cy-yellow);" onclick="toggleDispatchMode()">当前模式：自动补位</button>
+        </div>
+        <div class="premium-panel">
+            <label style="color:var(--cy-green); font-weight:bold; font-size:14px;">💾 Excel 数据管理导出/导入</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <button class="btn-prime" style="background:#2b5876;" onclick="exportExcel()">⬇️ 导出至 Excel</button>
+                <button class="btn-prime" style="background:#4b1248;" onclick="document.getElementById('import-excel').click()">⬆️ 从 Excel 还原</button>
+            </div>
+            <input type="file" id="import-excel" style="display:none" accept=".xlsx, .xls" onchange="importExcel(event)">
+        </div>
+        <div class="premium-panel">
+            <label style="color:var(--cy-pink); font-weight:bold; font-size:14px;">⚙️ 积分规则设定</label>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px;"><span>高手 赢 高手:</span> <input type="number" id="rule-hh" value="1" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>低手 赢 低手:</span> <input type="number" id="rule-ll" value="1" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>高手 赢 低手:</span> <input type="number" id="rule-hl" value="1" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; color: var(--cy-red); font-weight:bold; font-size:13px;"><span>低手 爆冷 高手:</span> <input type="number" id="rule-lh" value="3" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; color: var(--cy-green); font-weight:bold; font-size:13px; margin-top:10px;"><span>🌟 一杆清台 (附加分):</span> <input type="number" id="rule-clean" value="2" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; color: var(--cy-yellow); font-weight:bold; font-size:13px;"><span>🌟 剃光头 (附加分):</span> <input type="number" id="rule-shutout" value="2" style="width: 60px; padding: 5px;"></div>
+            <hr style="border-color: #333; margin: 10px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名连胜阈值:</span> <input type="number" id="rule-streak" value="3" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>终结红名赏金:</span> <input type="number" id="rule-bounty" value="2" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名后胜局分:</span> <input type="number" step="0.5" id="rule-reduced" value="0.5" style="width: 60px; padding: 5px;"></div>
+            <button class="btn-prime" onclick="saveRules()" style="margin-top: 15px; background:linear-gradient(90deg, #8E2DE2, #4A00E0);">保存并同步规则</button>
+        </div>
+        <div class="premium-panel">
+            <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">👥 参赛选手登记与专属颜色</label>
+            <div id="player-edit-list" style="margin-top:10px;"></div>
+            <button class="btn-prime" onclick="addPlayerForm()" style="margin-top: 10px;">+ 录入新选手</button>
+        </div>
+        <button class="btn-prime btn-alert" onclick="resetGame()" style="margin-top: 30px;">⚠️ 清空所有战绩并重置开局</button>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab(0, this)"><div class="nav-icon">🎱</div>赛场</div>
+        <div class="nav-item" onclick="switchTab(1, this)"><div class="nav-icon">📊</div>风云榜</div>
+        <div class="nav-item" onclick="switchTab(2, this)"><div class="nav-icon">🏆</div>荣誉</div>
+        <div class="nav-item" onclick="switchTab(3, this)"><div class="nav-icon">⚔️</div>恩怨</div>
+        <div class="nav-item" onclick="switchTab(4, this)"><div class="nav-icon">📖</div>详情</div>
+        <div class="nav-item" onclick="switchTab(5, this)"><div class="nav-icon">⚙️</div>设置</div>
+    </div>
+
+    <!-- 弹窗合集 -->
+    <div class="modal-bg" id="winMethodModal">
+        <div class="modal-box" style="max-width: 380px;">
+            <h3 style="color:var(--cy-cyan); margin-bottom: 5px;">战局结算</h3>
+            <p style="color: #aaa; font-size: 12px;">判定 <span id="win-p-name" style="color:#fff; font-weight:bold; font-size:14px;"></span> 获得胜利</p>
+            <div class="modal-btn-group">
+                <button class="btn-prime" onclick="openConfirmModal('normal')">凭实力正常获胜</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="openConfirmModal('clean')">🔥 一杆清台 (附加额外分)</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200);" onclick="openConfirmModal('shutout')">💀 剃光头 (附加额外分)</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #f12711, #f5af19);" onclick="openConfirmModal('foul')">对手失误送局 (白球同落等)</button>
+                <button class="btn-prime" style="background: transparent; border:1px solid #555; box-shadow:none; color:#aaa;" onclick="closeModals()">取消返回</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-bg" id="confirmModal">
+        <div class="modal-box">
+            <h3 style="color: var(--cy-red); margin-bottom: 10px;">⚠️ 确认执行</h3>
+            <p id="confirm-msg" style="font-size: 14px; margin-bottom: 20px; color:#ccc;"></p>
+            <div class="modal-btn-group" style="flex-direction: row;">
+                <button class="btn-prime btn-alert" onclick="executeWinLogic()" style="flex: 1;">确定结算</button>
+                <button class="btn-prime" style="background: transparent; border:1px solid #555; color:#aaa; flex:1;" onclick="closeModals()">放弃</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal-bg" id="manualDispatchModal">
+        <div class="modal-box">
+            <h3 style="color:var(--cy-yellow); margin-bottom: 5px;">自由派遣：指定下一场阵容</h3>
+            <select id="manual-p1" class="dispatch-select"></select>
+            <div style="font-weight:900; color:var(--cy-pink); font-size:24px; margin: 10px 0;">VS</div>
+            <select id="manual-p2" class="dispatch-select"></select>
+            <div class="modal-btn-group"><button class="btn-prime" onclick="confirmManualDispatch()">开始这局</button></div>
+        </div>
+    </div>
+
+    <script>
+        const NEON_COLORS = ['#00f3ff', '#ff00ea', '#fcee0a', '#00ff66', '#ff2a2a', '#b026ff', '#ff7b00', '#00ffcc'];
+        let defaultRules = { hh: 1, ll: 1, hl: 1, lh: 3, streakThreshold: 3, bounty: 2, reduced: 0.5, cleanBonus: 2, shutoutBonus: 2 };
+        let appData = {
+            roomId: Math.floor(1000 + Math.random() * 9000).toString(), timestamp: Date.now(),
+            rules: { ...defaultRules }, players: [], table: [], queue: [], matches: [],
+            currentMatchStartTime: null, dispatchMode: 'auto'
+        };
+        let historyStack = []; let historyIndex = -1; let mqttClient = null; 
+        let pendingWinContext = { index: -1, type: '' }; 
+        let detailSortBy = 'id'; let detailSortAsc = false;
+
+        setInterval(() => {
+            let timerEl = document.getElementById('match-timer-display'); let btnEl = document.getElementById('btn-start-timer');
+            if(appData.currentMatchStartTime) {
+                let s = Math.floor((Date.now() - appData.currentMatchStartTime)/1000);
+                timerEl.innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                btnEl.innerText = "计时中..."; btnEl.style.background = "var(--cy-pink)";
+            } else { timerEl.innerText = "00:00"; btnEl.innerText = "开始计时"; btnEl.style.background = "var(--cy-cyan)"; }
+        }, 1000);
+
+        function init() {
+            let localData = localStorage.getItem('esportsPoolDataUltV4');
+            if(localData) {
+                try {
+                    let parsed = JSON.parse(localData); appData = { ...appData, ...parsed };
+                    if(!appData.matches) appData.matches = [];
+                    if(!appData.dispatchMode) appData.dispatchMode = 'auto';
+                    if(!appData.rules.cleanBonus) appData.rules.cleanBonus = 2;
+                    if(!appData.rules.shutoutBonus) appData.rules.shutoutBonus = 2;
+                    appData.players.forEach(p => initPlayerStats(p));
+                } catch(e) {}
+            }
+            if(appData.players.length === 0) {
+                addPlayer('奥沙利文', 'high', 'https://api.dicebear.com/7.x/notionists/svg?seed=A');
+                addPlayer('丁俊晖', 'high', 'https://api.dicebear.com/7.x/notionists/svg?seed=B');
+                addPlayer('新人', 'low', 'https://api.dicebear.com/7.x/notionists/svg?seed=C');
+                addPlayer('路人王', 'low', 'https://api.dicebear.com/7.x/notionists/svg?seed=D');
+                appData.table = [appData.players[0].id, appData.players[1].id]; appData.queue = [appData.players[2].id, appData.players[3].id];
+            }
+            document.getElementById('room-input').value = appData.roomId;
+            updateDispatchBtnUI(); saveStateToHistory(); connectMqtt(); updateAllUI();
+        }
+
+        function initPlayerStats(p) {
+            if(!p.status) p.status = 'active'; 
+            if(!p.color) p.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+            if(p.maxWinStreak === undefined) p.maxWinStreak = 0; if(p.maxLoseStreak === undefined) p.maxLoseStreak = 0;
+            if(p.currentLoseStreak === undefined) p.currentLoseStreak = 0; if(p.normalWins === undefined) p.normalWins = 0;
+            if(p.foulWins === undefined) p.foulWins = 0; if(p.cleanWins === undefined) p.cleanWins = 0; if(p.shutoutWins === undefined) p.shutoutWins = 0;
+            if(p.bountyKills === undefined) p.bountyKills = 0; if(p.timesBounty === undefined) p.timesBounty = 0; 
+            if(p.upsetWins === undefined) p.upsetWins = 0; if(p.sameLevelWins === undefined) p.sameLevelWins = 0; 
+            if(p.totalScoreEarned === undefined) p.totalScoreEarned = p.score || 0;
+        }
+
+        function saveStateToHistory() {
+            if (historyIndex < historyStack.length - 1) historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(JSON.stringify(appData)); historyIndex++; updateUndoRedoBtns();
+        }
+        function updateUndoRedoBtns() { document.getElementById('btn-undo').disabled = historyIndex <= 0; document.getElementById('btn-redo').disabled = historyIndex >= historyStack.length - 1; }
+        function undo() { if(historyIndex > 0) { historyIndex--; applyHistoryState(); } }
+        function redo() { if(historyIndex < historyStack.length - 1) { historyIndex++; applyHistoryState(); } }
+        function applyHistoryState() { appData = JSON.parse(historyStack[historyIndex]); appData.timestamp = Date.now(); saveLocalAndSync(); updateAllUI(); updateUndoRedoBtns(); }
+        function saveLocalAndSync() { appData.timestamp = Date.now(); localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); broadcastState(); }
+        function getPlayer(id) { return appData.players.find(p => p.id === id); }
+
+        function toggleDispatchMode() { appData.dispatchMode = appData.dispatchMode === 'auto' ? 'manual' : 'auto'; updateDispatchBtnUI(); saveLocalAndSync(); }
+        function updateDispatchBtnUI() {
+            let btn = document.getElementById('btn-dispatch-mode');
+            if(appData.dispatchMode === 'auto') { btn.innerText = "当前模式：自动补位"; btn.style.borderColor = "var(--cy-cyan)"; btn.style.color = "var(--cy-cyan)"; } 
+            else { btn.innerText = "当前模式：自由派遣"; btn.style.borderColor = "var(--cy-pink)"; btn.style.color = "var(--cy-pink)"; }
+        }
+        function startTimer() { if(!appData.currentMatchStartTime) { appData.currentMatchStartTime = Date.now(); saveStateToHistory(); saveLocalAndSync(); } }
+        function toggleRest(pid) { let p = getPlayer(pid); if(!p) return; p.status = p.status === 'resting' ? 'active' : 'resting'; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); }
+
+        function startWinFlow(index) {
+            pendingWinContext.index = index; document.getElementById('win-p-name').innerText = getPlayer(appData.table[index]).name;
+            document.getElementById('winMethodModal').style.display = 'flex';
+        }
+        function openConfirmModal(type) {
+            pendingWinContext.type = type; document.getElementById('winMethodModal').style.display = 'none';
+            let winner = getPlayer(appData.table[pendingWinContext.index]);
+            let textMap = { 'normal': '凭实力正常获胜', 'clean': '一杆清台 (享附加分)', 'shutout': '剃光头 (享附加分)', 'foul': '对手失误导致获胜' };
+            document.getElementById('confirm-msg').innerHTML = `判定 <b>${winner.name}</b> <br><span style="color:var(--cy-cyan);font-size:18px;">[ ${textMap[type]} ]</span>`;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+        function closeModals() { document.getElementById('winMethodModal').style.display = 'none'; document.getElementById('confirmModal').style.display = 'none'; document.getElementById('manualDispatchModal').style.display = 'none'; }
+
+        function executeWinLogic() {
+            closeModals();
+            let winType = pendingWinContext.type; let wIdx = pendingWinContext.index;
+            let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]); if(!p1 || !p2) return;
+            let winner = wIdx === 0 ? p1 : p2; let loser = wIdx === 0 ? p2 : p1;
+
+            let durationSec = appData.currentMatchStartTime ? Math.floor((Date.now() - appData.currentMatchStartTime)/1000) : 0;
+            appData.currentMatchStartTime = null; 
+
+            let earnedPoints = 0;
+            if(winner.level === 'high' && loser.level === 'high') { earnedPoints = appData.rules.hh; winner.sameLevelWins++; }
+            else if(winner.level === 'low' && loser.level === 'low') { earnedPoints = appData.rules.ll; winner.sameLevelWins++; }
+            else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = appData.rules.hl; }
+            else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = appData.rules.lh; winner.upsetWins++; }
+            
+            if(winner.streak >= appData.rules.streakThreshold) earnedPoints = appData.rules.reduced;
+            let isBountyKill = false;
+            if(loser.streak >= appData.rules.streakThreshold) { earnedPoints += appData.rules.bounty; isBountyKill = true; winner.bountyKills++; }
+            
+            if(winType === 'clean') { earnedPoints += appData.rules.cleanBonus; winner.cleanWins++; }
+            if(winType === 'shutout') { earnedPoints += appData.rules.shutoutBonus; winner.shutoutWins++; }
+
+            let wTags = []; let lTags = [];
+            if(winner.wins === 0) wTags.push('首胜');
+            if(winner.streak > 0) wTags.push(`连胜`);
+            if(loser.currentLoseStreak > 0) lTags.push(`连败`);
+            if(isBountyKill) wTags.push('终结红名');
+            if(winType === 'clean') wTags.push('清台');
+            if(winType === 'shutout') wTags.push('剃头');
+
+            winner.score += earnedPoints; winner.totalScoreEarned += earnedPoints;
+            winner.wins += 1; winner.streak += 1; winner.currentLoseStreak = 0;
+            if(winner.streak > winner.maxWinStreak) winner.maxWinStreak = winner.streak;
+            if(winner.streak === appData.rules.streakThreshold) winner.timesBounty++;
+            if(winType === 'normal') winner.normalWins++; else if(winType === 'foul') winner.foulWins++;
+
+            loser.losses += 1; loser.streak = 0; loser.currentLoseStreak += 1;
+            if(loser.currentLoseStreak > loser.maxLoseStreak) loser.maxLoseStreak = loser.currentLoseStreak;
+
+            appData.matches.push({ p1: p1.id, p2: p2.id, winner: winner.id, type: winType, duration: durationSec, ts: Date.now(), wTags, lTags });
+
+            if(appData.dispatchMode === 'auto') {
+                let newTable = []; appData.queue.push(loser.id);
+                if(winner.status === 'active') { newTable.push(winner.id); } else { appData.queue.push(winner.id); } 
+                while(newTable.length < 2 && appData.queue.some(id => getPlayer(id).status === 'active')) {
+                    let nextIdx = appData.queue.findIndex(id => getPlayer(id).status === 'active');
+                    newTable.push(appData.queue[nextIdx]); appData.queue.splice(nextIdx, 1);
+                }
+                appData.table = newTable;
+                saveStateToHistory(); saveLocalAndSync(); updateAllUI();
+            } else {
+                appData.table = []; appData.queue.push(winner.id); appData.queue.push(loser.id);
+                saveLocalAndSync(); updateAllUI(); showManualDispatchModal(winner.id);
+            }
+        }
+
+        function showManualDispatchModal(defaultWinnerId) {
+            let m1 = document.getElementById('manual-p1'); let m2 = document.getElementById('manual-p2');
+            let opts = appData.players.map(p => `<option value="${p.id}">${p.name} ${p.status==='resting'?'(休息)':''}</option>`).join('');
+            m1.innerHTML = opts; m2.innerHTML = opts;
+            if(defaultWinnerId) { m1.value = defaultWinnerId; let nextOpp = appData.players.find(p => p.id !== defaultWinnerId && p.status === 'active'); if(nextOpp) m2.value = nextOpp.id; }
+            document.getElementById('manualDispatchModal').style.display = 'flex';
+        }
+        function confirmManualDispatch() {
+            let id1 = document.getElementById('manual-p1').value; let id2 = document.getElementById('manual-p2').value;
+            if(id1 === id2) return alert("不能选择同一个玩家对战！");
+            appData.table = [id1, id2]; appData.queue = appData.players.map(p=>p.id).filter(id => id!==id1 && id!==id2);
+            closeModals(); saveStateToHistory(); saveLocalAndSync(); updateAllUI();
+        }
+
+        function updateAllUI() { renderPlayArea(); renderStats(); renderAchievements(); renderH2H(); renderMatchDetails(); renderSettings(); }
+
+        function renderPlayArea() {
+            document.getElementById('current-game-num').innerText = `第 ${appData.matches.length + 1} 局`;
+            let container = document.getElementById('play-area');
+            if(appData.table.length < 2) return container.innerHTML = `<div class="premium-panel" style="text-align:center;">等待排队选手上桌<br><button class="btn-prime" style="margin-top:10px;" onclick="showManualDispatchModal()">手动安排对局</button></div>`;
+            
+            let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]);
+            let buildCard = (p, index) => {
+                let isStreak = p.streak >= appData.rules.streakThreshold;
+                // 将原先的呼吸灯类去掉，改用静态常亮发光类 static-neon-glow
+                let cClass = isStreak ? 'static-neon-glow' : '';
+                return `
+                    <div class="combatant-outer ${cClass}" style="--glow-color: ${p.color};">
+                        <div class="combatant">
+                            <div class="c-img-wrapper"><img src="${p.avatar}"></div>
+                            ${isStreak ? `<div class="streak-label" style="--glow-color:${p.color};">🔥 连胜 ${p.streak} 局</div>` : ''}
+                            <div class="c-info-layer">
+                                <div class="c-name">${p.name}</div>
+                                <div class="c-score">${p.score}</div>
+                                <button class="btn-prime" style="padding:8px; border-radius:30px;" onclick="startWinFlow(${index})">判定胜利</button>
+                            </div>
+                        </div>
+                    </div>`;
+            };
+            container.innerHTML = `<div class="battle-arena">${buildCard(p1, 0)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1)}</div>`;
+
+            document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
+                let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
+                return `<div class="q-item ${isResting ? 'is-resting' : ''}"><img src="${p.avatar}" class="q-avatar" onclick="toggleRest('${p.id}')"><div class="q-name">${p.name}</div><div class="rest-btn" onclick="toggleRest('${p.id}')">${isResting ? '休息中' : '可上场'}</div></div>`;
+            }).join('');
+        }
+
+        function renderStats() {
+            let container = document.getElementById('stats-list');
+            let sorted = [...appData.players].sort((a, b) => b.score - a.score);
+            container.innerHTML = sorted.map((p, index) => {
+                let total = p.wins + p.losses; let rate = total > 0 ? Math.round((p.wins / total) * 100) : 0;
+                let isLast = index === sorted.length - 1 && sorted.length > 1; let isFirst = index === 0 && sorted.length > 1;
+                
+                // 排名数字颜色根据名次
+                let numColor = "var(--cy-green)"; if(isFirst) numColor = "var(--cy-yellow)"; if(isLast) numColor = "var(--cy-red)";
+                
+                return `
+                    <div class="rank-card-outer">
+                        <div class="rank-inner" style="border: 2px solid ${p.color}; box-shadow: 0 0 10px ${p.color}; border-radius: 6px;">
+                            <div class="rank-left">
+                                <div class="rank-num" style="color: ${numColor};">${index + 1}</div>
+                                <!-- 这里专门给头像右侧加上一个隔离边框或者直接让整体边框生效 -->
+                                <img src="${p.avatar}" style="border-right: 2px solid ${p.color}; ${p.status==='resting'?'filter:grayscale(100%);':''}">
+                            </div>
+                            <div class="rank-right">
+                                <div class="rank-header"><div class="rank-name-box">${p.name} <span style="font-size:10px;color:#aaa;">[${p.level==='high'?'高手':'进阶'}]</span></div><div class="rank-score-box">${p.score}</div></div>
+                                <div class="rank-details-grid">
+                                    <div class="stat-badge" style="color:var(--cy-green);">胜局: ${p.wins}</div>
+                                    <div class="stat-badge" style="color:var(--cy-red);">负局: ${p.losses}</div>
+                                    <div class="stat-badge" style="color:var(--cy-cyan);">胜率: ${rate}%</div>
+                                    <div class="stat-badge" style="color:var(--cy-pink);">连胜: ${p.streak}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            let dEl = document.getElementById('last-match-date');
+            if(appData.matches.length > 0) {
+                let d = new Date(appData.matches[appData.matches.length - 1].ts);
+                dEl.innerText = `截止日期: ${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`;
+            } else { dEl.innerText = "截止日期: 暂无对战数据"; }
+        }
+
+        // --- 荣誉殿堂 ---
+        function renderAchievements() {
+            let c = document.getElementById('achieve-list');
+            let ps = appData.players.filter(p => (p.wins + p.losses) > 0);
+            let p5 = ps.filter(p => (p.wins + p.losses) >= 5);
+            let validMatches = appData.matches.filter(m => m.duration > 0);
+
+            let sortV = (arr, fn) => [...arr].sort(fn)[0] || null;
+            let checkZ = (p, val) => (p && val > 0) ? p : null;
+
+            let a1 = checkZ(sortV(ps, (a,b)=>b.maxWinStreak - a.maxWinStreak), ps.length ? sortV(ps, (a,b)=>b.maxWinStreak - a.maxWinStreak).maxWinStreak : 0);
+            let a2 = checkZ(sortV(ps, (a,b)=>b.maxLoseStreak - a.maxLoseStreak), ps.length ? sortV(ps, (a,b)=>b.maxLoseStreak - a.maxLoseStreak).maxLoseStreak : 0);
+            let a3 = validMatches.length ? getPlayer(sortV(validMatches, (a,b)=>a.duration - b.duration).winner) : null; let a3v = validMatches.length ? sortV(validMatches, (a,b)=>a.duration - b.duration).duration : 0;
+            let a4 = validMatches.length ? getPlayer(sortV(validMatches, (a,b)=>b.duration - a.duration).winner) : null; let a4v = validMatches.length ? sortV(validMatches, (a,b)=>b.duration - a.duration).duration : 0;
+            let a5 = checkZ(sortV(ps, (a,b)=>b.bountyKills - a.bountyKills), ps.length ? sortV(ps, (a,b)=>b.bountyKills - a.bountyKills).bountyKills : 0);
+            let a6 = checkZ(sortV(ps, (a,b)=>b.foulWins - a.foulWins), ps.length ? sortV(ps, (a,b)=>b.foulWins - a.foulWins).foulWins : 0);
+            let a7 = checkZ(sortV(ps, (a,b)=>b.cleanWins - a.cleanWins), ps.length ? sortV(ps, (a,b)=>b.cleanWins - a.cleanWins).cleanWins : 0);
+            let a8 = checkZ(sortV(ps, (a,b)=>b.shutoutWins - a.shutoutWins), ps.length ? sortV(ps, (a,b)=>b.shutoutWins - a.shutoutWins).shutoutWins : 0);
+            let a9 = checkZ(sortV(ps, (a,b)=>b.sameLevelWins - a.sameLevelWins), ps.length ? sortV(ps, (a,b)=>b.sameLevelWins - a.sameLevelWins).sameLevelWins : 0);
+            let a10 = checkZ(sortV(ps, (a,b)=>b.upsetWins - a.upsetWins), ps.length ? sortV(ps, (a,b)=>b.upsetWins - a.upsetWins).upsetWins : 0);
+            let a11 = p5.length ? sortV(p5, (a,b)=>(b.wins/(b.wins+b.losses)) - (a.wins/(a.wins+a.losses))) : null;
+            let a12 = p5.length ? sortV(p5, (a,b)=>(a.wins/(a.wins+a.losses)) - (b.wins/(b.wins+b.losses))) : null;
+            let a13 = checkZ(sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)), ps.length ? (sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)).wins + sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)).losses) : 0);
+            let a14 = checkZ(sortV(ps, (a,b)=>b.totalScoreEarned - a.totalScoreEarned), ps.length ? sortV(ps, (a,b)=>b.totalScoreEarned - a.totalScoreEarned).totalScoreEarned : 0);
+            let a15 = checkZ(sortV(ps, (a,b)=>b.losses - a.losses), ps.length ? sortV(ps, (a,b)=>b.losses - a.losses).losses : 0);
+            let a16 = checkZ(sortV(ps, (a,b)=>b.timesBounty - a.timesBounty), ps.length ? sortV(ps, (a,b)=>b.timesBounty - a.timesBounty).timesBounty : 0);
+            let a17 = checkZ(sortV(ps, (a,b)=>b.normalWins - a.normalWins), ps.length ? sortV(ps, (a,b)=>b.normalWins - a.normalWins).normalWins : 0);
+
+            let avgArr = ps.map(p => {
+                let mw = validMatches.filter(m => m.winner === p.id);
+                if(mw.length < 3) return { p:p, avg: 0 };
+                let sum = mw.reduce((acc, cur) => acc + cur.duration, 0);
+                return { p:p, avg: Math.floor(sum/mw.length) };
+            }).filter(x => x.avg > 0);
+            let a18 = avgArr.length ? sortV(avgArr, (a,b)=>a.avg - b.avg).p : null; let a18v = avgArr.length ? sortV(avgArr, (a,b)=>a.avg - b.avg).avg : 0;
+            let a19 = avgArr.length ? sortV(avgArr, (a,b)=>b.avg - a.avg).p : null; let a19v = avgArr.length ? sortV(avgArr, (a,b)=>b.avg - a.avg).avg : 0;
+            
+            let h2hMap = {}; appData.matches.forEach(m => { let k = m.winner + '_' + (m.winner===m.p1?m.p2:m.p1); h2hMap[k]=(h2hMap[k]||0)+1; });
+            let hMaxK = Object.keys(h2hMap).sort((a,b)=>h2hMap[b]-h2hMap[a])[0];
+            let a20 = (hMaxK && h2hMap[hMaxK]>1) ? getPlayer(hMaxK.split('_')[0]) : null; let a20v = hMaxK ? h2hMap[hMaxK] : 0;
+
+            let buildA = (icon, title, desc, p, val) => {
+                let achieved = p != null;
+                // 取消了呼吸灯动画，全部使用静态玩家边框
+                let bClass = achieved ? 'static-neon-glow' : 'achieve-disabled';
+                let cStyle = achieved ? `style="--glow-color: ${p.color};"` : '';
+                return `
+                    <div class="ach-card-outer ${bClass}" ${cStyle}>
+                        <div class="ach-card">
+                            <div class="ach-left-icon">${icon}</div>
+                            <div class="ach-mid-info">
+                                <div class="ach-title">${title} <span class="ach-val">${achieved ? val : '未达成'}</span></div>
+                                <div class="ach-player">${achieved ? p.name : '---'}</div>
+                                <div class="ach-desc">${desc}</div>
+                            </div>
+                            <div class="ach-right-avatar"><img src="${achieved ? p.avatar : ''}"></div>
+                        </div>
+                    </div>`;
+            };
+
+            let fTime = (s) => `${Math.floor(s/60)}分${s%60}秒`;
+            
+            let html = '';
+            html += buildA('🔥', '独孤求败', '历史最高连胜纪录的霸主。', a1, a1?a1.maxWinStreak+' 局':'');
+            html += buildA('🥶', '天选非酋', '连败场次最多，屡败屡战！', a2, a2?a2.maxLoseStreak+' 局':'');
+            html += buildA('⚡', '闪电战王', '单局耗时极短，速战速决。', a3, a3?fTime(a3v):'');
+            html += buildA('⏳', '膀胱局大师', '单局最长鏖战，磨人心智。', a4, a4?fTime(a4v):'');
+            html += buildA('🎱', '一杆清台王', '直接清台不给对手留机会。', a7, a7?a7.cleanWins+' 次':'');
+            html += buildA('💀', '剃光头魔王', '把对手打得一颗球没进。', a8, a8?a8.shutoutWins+' 次':'');
+            html += buildA('🎯', '赏金猎人', '击杀悬赏红名次数最多。', a5, a5?a5.bountyKills+' 次':'');
+            html += buildA('🎁', '躺赢锦鲤', '靠对手犯规白球同落获胜。', a6, a6?a6.foulWins+' 次':'');
+            html += buildA('⚔️', '内卷之王', '最喜欢在同级别中称霸。', a9, a9?a9.sameLevelWins+' 次':'');
+            html += buildA('🚀', '以下克上', '爆冷干掉高手次数最多。', a10, a10?a10.upsetWins+' 次':'');
+            html += buildA('👑', '常胜将军', '整体胜率最高 (满5局起)。', a11, a11?Math.round(a11.wins/(a11.wins+a11.losses)*100)+'%':'');
+            html += buildA('💸', '散财童子', '整体胜率最低 (满5局起)。', a12, a12?Math.round(a12.wins/(a12.wins+a12.losses)*100)+'%':'');
+            html += buildA('🛠️', '台球劳模', '参与比赛的总局数最多。', a13, a13?(a13.wins+a13.losses)+' 局':'');
+            html += buildA('💰', '得分机器', '累积赚取的绝对积分最多。', a14, a14?a14.totalScoreEarned+' 分':'');
+            html += buildA('🕊️', '和平使者', '输掉的局数最多，善待他人。', a15, a15?a15.losses+' 局':'');
+            html += buildA('👹', '红名常客', '打出连胜被全场针对最多。', a16, a16?a16.timesBounty+' 次':'');
+            html += buildA('💪', '实力碾压', '靠硬实力正常打进黑八。', a17, a17?a17.normalWins+' 次':'');
+            html += buildA('🔫', '快枪手', '赢局平均耗时最短(满3局)。', a18, a18?fTime(a18v):'');
+            html += buildA('🐌', '折磨王', '赢局平均耗时最长(满3局)。', a19, a19?fTime(a19v):'');
+            html += buildA('🧛', '一生之敌', '对特定目标提款次数最多。', a20, a20?a20v+' 次':'');
+            
+            c.innerHTML = html;
+        }
+
+        function renderH2H() {
+            let container = document.getElementById('h2h-list');
+            let sortedPlayers = [...appData.players].sort((a,b) => b.score - a.score);
+            let html = '';
+
+            sortedPlayers.forEach(p => {
+                let matchesInvolved = appData.matches.filter(m => m.p1 === p.id || m.p2 === p.id);
+                if(matchesInvolved.length === 0) return;
+                
+                let oppStats = {}; 
+                matchesInvolved.forEach(m => {
+                    let oppId = m.p1 === p.id ? m.p2 : m.p1;
+                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0 };
+                    if(m.winner === p.id) oppStats[oppId].w++; else oppStats[oppId].l++;
+                });
+
+                let tMatch = p.wins + p.losses; let tWinPct = tMatch===0 ? 0 : Math.round((p.wins/tMatch)*100);
+                
+                let oppHtml = '';
+                for(let oppId in oppStats) {
+                    let opp = getPlayer(oppId); if(!opp) continue;
+                    let st = oppStats[oppId];
+                    let t = st.w + st.l; let pPct = t===0?50:Math.round((st.w/t)*100); let oPct = t===0?50:Math.round((st.l/t)*100);
+                    oppHtml += `
+                        <div class="h2h-opponent-row">
+                            <div class="h2h-bar-container">
+                                <div class="h2h-bar-names"><span>VS ${opp.name}</span></div>
+                                <div class="h2h-bar-wrap">
+                                    <div class="h2h-bar-left" style="width:${pPct}%; background:${p.color}"></div>
+                                    <div class="h2h-bar-right" style="width:${100-pPct}%; background:#444"></div>
+                                </div>
+                                <div class="h2h-vs-stats"><span>胜: ${st.w}局 (${pPct}%)</span><span>负: ${st.l}局 (${oPct}%)</span></div>
+                            </div>
+                            <img src="${opp.avatar}" class="h2h-opp-img">
+                        </div>`;
+                }
+                
+                html += `
+                    <div class="player-h2h-section" style="--player-color: ${p.color};">
+                        <div class="h2h-owner">
+                            <img src="${p.avatar}">
+                            <div class="h2h-owner-info">
+                                <div class="h2h-owner-name">${p.name}</div>
+                                <div class="h2h-owner-stats">总局:${tMatch} | 胜局:${p.wins} (${tWinPct}%)</div>
+                            </div>
+                            <div class="h2h-owner-score">${p.score} 分</div>
+                        </div>
+                        ${oppHtml}
+                    </div>`;
+            });
+            container.innerHTML = html === '' ? '<div style="text-align:center;color:#666;">暂无交战记录</div>' : html;
+        }
+
+        function switchDetailTab(tabName) {
+            document.getElementById('tab-btn-log').classList.remove('active'); document.getElementById('tab-btn-schedule').classList.remove('active');
+            document.getElementById('view-match-log').style.display = 'none'; document.getElementById('view-match-schedule').style.display = 'none';
+            document.getElementById('tab-btn-' + tabName).classList.add('active'); document.getElementById('view-match-' + tabName).style.display = 'block';
+            if(tabName === 'schedule') renderMatchSchedule(); 
+        }
+        function toggleSort(type) { if(detailSortBy === type) detailSortAsc = !detailSortAsc; else { detailSortBy = type; detailSortAsc = false; } renderMatchDetails(); }
+
+        function renderMatchDetails() {
+            let logList = document.getElementById('match-log-list');
+            let arr = appData.matches.map((m, idx) => ({ ...m, realId: idx + 1 }));
+            arr.sort((a, b) => { let vA = detailSortBy === 'id' ? a.realId : a.duration; let vB = detailSortBy === 'id' ? b.realId : b.duration; return detailSortAsc ? vA - vB : vB - vA; });
+
+            logList.innerHTML = arr.map(m => {
+                let p1 = getPlayer(m.p1); let p2 = getPlayer(m.p2); if(!p1||!p2)return'';
+                let isP1Win = m.winner === p1.id;
+                let formatTime = m.duration > 0 ? `${Math.floor(m.duration/60)}分${m.duration%60}秒` : '--';
+                
+                let tagHtml = '';
+                if(m.wTags) m.wTags.forEach(t => tagHtml += `<div class="match-tag ${t==='首胜'?'tag-first':(t==='终结红名'?'tag-break':(t==='清台'||t==='剃头'?'tag-break':'tag-streak'))}">${t}</div>`);
+                if(m.lTags) m.lTags.forEach(t => tagHtml += `<div class="match-tag tag-lose">${t}</div>`);
+
+                return `
+                    <div class="match-log-item">
+                        <div class="log-num">#${m.realId}</div>
+                        <div class="log-vs">
+                            <div class="log-avatar-wrap"><img src="${p1.avatar}" class="log-avatar" style="${!isP1Win?'filter:grayscale(100%);':''} border-color:${p1.color};">${isP1Win?'<div class="log-crown">👑</div>':''}<div class="log-tags">${isP1Win?tagHtml:''}</div></div>
+                            <span style="font-size:12px;color:#555;">VS</span>
+                            <div class="log-avatar-wrap"><img src="${p2.avatar}" class="log-avatar" style="${isP1Win?'filter:grayscale(100%);':''} border-color:${p2.color};">${!isP1Win?'<div class="log-crown">👑</div>':''}<div class="log-tags">${!isP1Win?tagHtml:''}</div></div>
+                        </div>
+                        <div class="log-time">${formatTime}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderMatchSchedule() {
+            let tbody = document.getElementById('schedule-tbody'); let grouped = {};
+            appData.matches.forEach((m, idx) => {
+                let d = new Date(m.ts).toLocaleDateString();
+                if(!grouped[d]) grouped[d] = { indices: [], totalDur: 0 };
+                grouped[d].indices.push(idx + 1); grouped[d].totalDur += (m.duration || 0);
+            });
+            let html = '';
+            for(let date in grouped) {
+                let data = grouped[date]; let count = data.indices.length; let range = `${Math.min(...data.indices)}~${Math.max(...data.indices)}`;
+                let fHms = (sec) => `${Math.floor(sec/3600)}:${Math.floor((sec%3600)/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+                html += `<tr><td>${date}</td><td>${range}</td><td>${fHms(data.totalDur)}</td><td>${fHms(count>0?Math.floor(data.totalDur/count):0)}</td></tr>`;
+            }
+            tbody.innerHTML = html || '<tr><td colspan="4" style="color:#666;">暂无对战数据</td></tr>';
+        }
+
+        function exportExcel() {
+            if(typeof XLSX === 'undefined') return alert("Excel 组件加载中，请稍后。");
+            let wb = XLSX.utils.book_new();
+            
+            let matchData = [["局数", "时间", "胜者", "败者", "获胜方式", "耗时(秒)"]];
+            let tMap = { 'normal': '正常', 'clean': '清台', 'shutout': '剃头', 'foul': '失误' };
+            appData.matches.forEach((m, i) => {
+                let w = getPlayer(m.winner); let l = getPlayer(m.winner===m.p1?m.p2:m.p1);
+                matchData.push([i+1, new Date(m.ts).toLocaleString(), w?w.name:'', l?l.name:'', tMap[m.type]||'未知', m.duration||0]);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(matchData), "对战明细");
+
+            let pData = [["排名", "姓名", "级别", "总积分", "胜局", "负局", "历史最高连胜", "清台次数", "专属颜色代码"]];
+            [...appData.players].sort((a,b)=>b.score-a.score).forEach((p, i) => pData.push([i+1, p.name, p.level==='high'?'高手':'进阶', p.score, p.wins, p.losses, p.maxWinStreak, p.cleanWins, p.color]));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pData), "积分排行");
+
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["!! 请勿修改此表内容，用于系统一键还原 !!"], [JSON.stringify(appData)]]), "SYSTEM_BACKUP");
+            XLSX.writeFile(wb, "赛博台球大师_赛事档案.xlsx");
+        }
+
+        function importExcel(event) {
+            let file = event.target.files[0]; if(!file) return;
+            if(typeof XLSX === 'undefined') return alert("Excel 组件加载异常。");
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                let backupSheetName = workbook.SheetNames.find(name => name.includes("SYSTEM_BACKUP"));
+                if(!backupSheetName) { alert("此 Excel 文件中未找到有效的 [SYSTEM_BACKUP] 还原数据！"); return; }
+                let cell = workbook.Sheets[backupSheetName]['A2']; 
+                if(cell && cell.v) {
+                    try {
+                        let parsed = JSON.parse(cell.v);
+                        if(parsed && parsed.players && parsed.rules) {
+                            appData = parsed; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("从 Excel 备份还原成功！");
+                        } else { alert("文件数据结构损坏。"); }
+                    } catch(err) { alert("JSON解析失败！"); }
+                } else { alert("未找到有效备份数据！"); }
+                event.target.value = ''; 
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderSettings() {
+            document.getElementById('rule-hh').value = appData.rules.hh; document.getElementById('rule-ll').value = appData.rules.ll;
+            document.getElementById('rule-hl').value = appData.rules.hl; document.getElementById('rule-lh').value = appData.rules.lh;
+            document.getElementById('rule-streak').value = appData.rules.streakThreshold; document.getElementById('rule-bounty').value = appData.rules.bounty; document.getElementById('rule-reduced').value = appData.rules.reduced;
+            document.getElementById('rule-clean').value = appData.rules.cleanBonus; document.getElementById('rule-shutout').value = appData.rules.shutoutBonus;
+            
+            document.getElementById('player-edit-list').innerHTML = appData.players.map(p => `
+                <div style="background:rgba(255,255,255,0.05); padding:12px; margin-bottom:10px; border-radius:4px; border-left:4px solid ${p.color};">
+                    <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                        <input type="text" value="${p.name}" onchange="updateP('${p.id}', 'name', this.value)" style="margin:0;flex:1;">
+                        <select onchange="updateP('${p.id}', 'level', this.value)" style="margin:0;width:auto;"><option value="high" ${p.level==='high'?'selected':''}>高手</option><option value="low" ${p.level==='low'?'selected':''}>进阶</option></select>
+                        <input type="color" value="${p.color}" onchange="updateP('${p.id}', 'color', this.value)" style="padding:0; width:30px; height:30px; border:none; cursor:pointer;" title="修改玩家专属颜色">
+                        <button class="btn-prime btn-alert" style="width:auto; padding:0 15px;" onclick="removePlayer('${p.id}')">删</button>
+                    </div>
+                    <input type="text" value="${p.avatar}" onchange="updateP('${p.id}', 'avatar', this.value)" placeholder="头像URL" style="margin:0; font-size:11px;">
+                </div>`).join('');
+        }
+
+        function saveRules() { 
+            appData.rules.hh = parseFloat(document.getElementById('rule-hh').value); appData.rules.ll = parseFloat(document.getElementById('rule-ll').value);
+            appData.rules.hl = parseFloat(document.getElementById('rule-hl').value); appData.rules.lh = parseFloat(document.getElementById('rule-lh').value);
+            appData.rules.streakThreshold = parseInt(document.getElementById('rule-streak').value); appData.rules.bounty = parseFloat(document.getElementById('rule-bounty').value); appData.rules.reduced = parseFloat(document.getElementById('rule-reduced').value);
+            appData.rules.cleanBonus = parseFloat(document.getElementById('rule-clean').value); appData.rules.shutoutBonus = parseFloat(document.getElementById('rule-shutout').value);
+            saveStateToHistory(); saveLocalAndSync(); alert("规则同步完成。");
+        }
+        function addPlayer(name="新选手", level="low", avatar="") {
+            let id='p_'+Date.now()+Math.floor(Math.random()*1000); if(!avatar) avatar=`https://api.dicebear.com/7.x/notionists/svg?seed=${id}`;
+            let p={id,name,level,avatar,score:0,wins:0,losses:0,streak:0}; initPlayerStats(p); appData.players.push(p);
+            if(appData.table.length<2) appData.table.push(id); else appData.queue.push(id);
+        }
+        function addPlayerForm() { addPlayer(); saveStateToHistory(); saveLocalAndSync(); updateAllUI(); }
+        function updateP(id,k,v) { let p=getPlayer(id); if(p) p[k]=v; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); }
+        function removePlayer(id) {
+            if(!confirm("确认删除该选手？不可恢复。")) return;
+            appData.players=appData.players.filter(p=>p.id!==id); appData.table=appData.table.filter(pid=>pid!==id); appData.queue=appData.queue.filter(pid=>pid!==id);
+            while(appData.table.length<2 && appData.queue.length>0) appData.table.push(appData.queue.shift());
+            saveStateToHistory(); saveLocalAndSync(); updateAllUI();
+        }
+        function resetGame() {
+            if(!confirm("严重警告：清空所有战绩、计时和成就记录？")) return;
+            appData.players.forEach(p => { p.score=0; p.wins=0; p.losses=0; p.streak=0; p.totalScoreEarned=0; p.maxWinStreak=0; p.maxLoseStreak=0; p.currentLoseStreak=0; p.normalWins=0; p.foulWins=0; p.bountyKills=0; p.timesBounty=0; p.upsetWins=0; p.sameLevelWins=0; p.cleanWins=0; p.shutoutWins=0; p.status='active';});
+            appData.matches = []; appData.currentMatchStartTime = null; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("战绩已全面重置！");
+        }
+        
+        function joinRoom() { let r = document.getElementById('room-input').value.trim(); if(r && r!==appData.roomId) { appData.roomId=r; saveLocalAndSync(); connectMqtt(); updateAllUI(); } }
+        function connectMqtt() {
+            if(mqttClient) mqttClient.end();
+            document.getElementById('mqtt-status').innerHTML = '🟡 连接中';
+            mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+            mqttClient.on('connect', () => { document.getElementById('mqtt-status').innerHTML = '<span style="color:var(--cy-cyan);">🟢 联机成功</span>'; mqttClient.subscribe(`esports_pool_game_ult_v4_${appData.roomId}`); broadcastState(); });
+            mqttClient.on('message', (t, msg) => {
+                try { let inc = JSON.parse(msg.toString()); if(inc.timestamp > appData.timestamp) { appData = inc.data; localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); updateAllUI(); updateDispatchBtnUI(); } } catch(e){}
+            });
+            mqttClient.on('close', () => document.getElementById('mqtt-status').innerHTML = '🔴 离线');
+        }
+        function broadcastState() { if(mqttClient && mqttClient.connected) mqttClient.publish(`esports_pool_game_ult_v4_${appData.roomId}`, JSON.stringify({ timestamp: appData.timestamp, data: appData })); }
+        
+        function switchTab(index, elem) {
+            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); elem.classList.add('active');
+            document.querySelectorAll('.page-container').forEach(el=>el.classList.remove('active'));
+            ['page-play','page-stats','page-achieve','page-h2h','page-details','page-settings'].forEach((id,i)=>{if(i===index) document.getElementById(id).classList.add('active');});
+            if(index === 4) { switchDetailTab('log'); } 
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
