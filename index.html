@@ -392,8 +392,8 @@
     <script>
         const NEON_COLORS = ['#00f3ff', '#ff00ea', '#fcee0a', '#00ff66', '#ff2a2a', '#b026ff', '#ff7b00', '#00ffcc'];
         let defaultRules = { hh: 1, ll: 1, hl: 1, lh: 3, streakThreshold: 3, bounty: 2, reduced: 0.5, cleanBonus: 2, shutoutBonus: 2 };
-        let appData = {
-            roomId: Math.floor(1000 + Math.random() * 9000).toString(), timestamp: Date.now(),
+let appData = {
+            roomId: "8888", timestamp: 0, // 修改点：永久固定房间号为 8888，初始时间设为0代表主动接收别人的新数据
             rules: { ...defaultRules }, players: [], table: [], queue: [], matches: [],
             currentMatchStartTime: null, dispatchMode: 'auto'
         };
@@ -947,43 +947,43 @@ function joinRoom() {
             let r = document.getElementById('room-input').value.trim(); 
             if(r && r !== appData.roomId) { 
                 appData.roomId = r; 
-                // ✨核心修复1：把自己的时间清零，强制接受房间里其他人的数据包
                 appData.timestamp = 0; 
                 document.getElementById('ui-room-id').innerText = r;
                 localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
-                // ✨核心修复2：传入 true，代表自己是“新来的”，要主动向房间里索要数据，而不是广播
-                connectMqtt(true); 
+                connectMqtt(); // 移除了多余的参数，适配新的无脑智能同步系统
                 updateAllUI(); 
             } 
         }
 
-        function connectMqtt(isJoining = false) {
+function connectMqtt() {
             if(mqttClient) mqttClient.end();
             document.getElementById('mqtt-status').innerHTML = '🟡 连接中';
             mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
             mqttClient.on('connect', () => { 
                 document.getElementById('mqtt-status').innerHTML = '<span style="color:var(--cy-cyan);">🟢 联机成功</span>'; 
+                // 订阅固定的房间号频道
                 mqttClient.subscribe(`esports_pool_game_ult_v4_${appData.roomId}`); 
-                if (isJoining) {
-                    // 如果自己是刚连进别人的房间，就发送一条“请求同步”的信号
-                    mqttClient.publish(`esports_pool_game_ult_v4_${appData.roomId}`, JSON.stringify({ type: 'request_sync' }));
-                } else {
-                    // 如果是自己建房或者刷新页面，才正常广播自己的状态
-                    broadcastState(); 
-                }
+                
+                // 【核心同步机制1】：无论谁打开网页，一连上就立刻大声广播自己的数据和最后修改的时间！
+                broadcastState(); 
             });
             mqttClient.on('message', (t, msg) => {
                 try { 
                     let inc = JSON.parse(msg.toString()); 
-                    if (inc.type === 'request_sync') {
-                        // ✨核心修复3：听到别人要数据，立刻把自己的最新数据广播给他
-                        broadcastState();
-                    } else if (inc.data && inc.timestamp > appData.timestamp) { 
-                        // 正常接收数据更新
-                        appData = inc.data; 
-                        localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
-                        updateAllUI(); 
-                        updateDispatchBtnUI(); 
+                    
+                    // 【核心同步机制2】：智能时间戳对比系统
+                    if (inc.data) {
+                        if (inc.timestamp > appData.timestamp) { 
+                            // 别人的数据时间戳比我的新：说明我落后了，乖乖拿别人的数据覆盖我的
+                            appData = inc.data; 
+                            localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
+                            updateAllUI(); 
+                            updateDispatchBtnUI(); 
+                        } else if (inc.timestamp < appData.timestamp) {
+                            // 别人的数据时间戳没我的新：说明他是刚刚打开网页的小白，我立刻把我的最新数据强行发送给他，帮他同步！
+                            broadcastState();
+                        }
+                        // 如果时间相等，说明大家都同步了，不产生任何多余消耗。
                     } 
                 } catch(e){}
             });
