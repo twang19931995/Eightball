@@ -306,9 +306,12 @@
 
     <div id="page-settings" class="page-container">
         <h2 class="title-glow">系统设置</h2>
-        <div class="premium-panel">
-            <label style="color:var(--cy-cyan); font-weight:bold; font-size:14px;">🌐 网络同步</label>
-            <div style="display:flex; gap:10px; margin-top:10px;"><input type="text" id="room-input" placeholder="输入4位数字房间号"><button class="btn-prime" onclick="joinRoom()" style="width: 80px; padding: 10px;">连接</button></div>
+<div class="premium-panel">
+            <label style="color:var(--cy-cyan); font-weight:bold; font-size:14px;">🌐 网络同步 (永久绑定唯一频道)</label>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <input type="text" id="room-input" value="房间已永久锁定为 8888" readonly style="color:var(--cy-yellow); text-align:center; background:#000; cursor:not-allowed; border: 1px solid #444;">
+                <button class="btn-prime" disabled style="width: 80px; padding: 10px; background:#222; color:#555; cursor:not-allowed;">已锁死</button>
+            </div>
         </div>
         <div class="premium-panel">
             <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">🛠️ 赛制派遣模式设定</label>
@@ -410,11 +413,14 @@ let appData = {
             } else { timerEl.innerText = "00:00"; btnEl.innerText = "开始计时"; btnEl.style.background = "var(--cy-cyan)"; }
         }, 1000);
 
-        function init() {
+function init() {
             let localData = localStorage.getItem('esportsPoolDataUltV4');
             if(localData) {
                 try {
-                    let parsed = JSON.parse(localData); appData = { ...appData, ...parsed };
+                    let parsed = JSON.parse(localData); 
+                    // 这里原本会读取旧记忆，把房间号搞乱
+                    appData = { ...appData, ...parsed };
+                    
                     if(!appData.matches) appData.matches = [];
                     if(!appData.dispatchMode) appData.dispatchMode = 'auto';
                     if(!appData.rules.cleanBonus) appData.rules.cleanBonus = 2;
@@ -422,6 +428,11 @@ let appData = {
                     appData.players.forEach(p => initPlayerStats(p));
                 } catch(e) {}
             }
+            
+            // 🚨🚨🚨 核心终极修复点在这里！🚨🚨🚨
+            // 不管浏览器以前存的是 3503 还是 2501，在这里“一刀切”，六亲不认，强行全部绑死在 8888 房间！
+            appData.roomId = "8888"; 
+
             if(appData.players.length === 0) {
                 addPlayer('奥沙利文', 'high', 'https://api.dicebear.com/7.x/notionists/svg?seed=A');
                 addPlayer('丁俊晖', 'high', 'https://api.dicebear.com/7.x/notionists/svg?seed=B');
@@ -429,7 +440,11 @@ let appData = {
                 addPlayer('路人王', 'low', 'https://api.dicebear.com/7.x/notionists/svg?seed=D');
                 appData.table = [appData.players[0].id, appData.players[1].id]; appData.queue = [appData.players[2].id, appData.players[3].id];
             }
-            document.getElementById('room-input').value = appData.roomId;
+            
+            // 强行把左上角的 UI 文字也直接焊死显示 8888
+            document.getElementById('ui-room-id').innerText = appData.roomId;
+            
+            // 启动网络并全服比对最新时间
             updateDispatchBtnUI(); saveStateToHistory(); connectMqtt(); updateAllUI();
         }
 
