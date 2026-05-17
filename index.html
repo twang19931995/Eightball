@@ -88,6 +88,42 @@
 
         .c-info-layer { position: relative; z-index: 2; margin-top: auto; padding: 15px 10px; background: linear-gradient(to top, rgba(0,0,0,1) 10%, rgba(0,0,0,0.7) 60%, transparent); display: flex; flex-direction: column; align-items: center; }
         .c-name { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px #000; margin-bottom: 2px; }
+/* 
+        ================================================================================
+        【控制台 8：终结红名奖金悬浮牌 - 样式终极调参面板】 (小白专属)
+        [控制目标]：核心赛场，红名玩家名字上方的“💰 终结奖金：XX 分”小牌子
+        
+        [如何调整大小和位置]：
+          1. margin-bottom: 4px;   -> 决定这个牌子和下方玩家名字的距离。数值越大，离名字越远。
+          2. font-size: 13px;      -> 牌子里面文字的大小。嫌小可以改成 15px 或更大。
+          3. padding: 4px 10px;    -> 牌子内部的上下左右留白(胖瘦)。4px是上下，10px是左右。
+          4. border-radius: 12px;  -> 圆角程度。改成 0px 就是方方正正的砖块，改成 20px 就是圆溜溜的胶囊。
+
+        [特效备用库 (你可以把下面的代码复制，粘贴替换到 background 或 box-shadow 里试效果)]：
+          * 赛博朋克蓝黄渐变底色： background: linear-gradient(90deg, #00f3ff, #fcee0a); color: #000;
+          * 滴血恶魔红外发光特效： box-shadow: 0 0 10px #ff2a2a, inset 0 0 5px #ff2a2a; border: 1px solid #ff2a2a;
+          * 土豪金高贵文字发光： text-shadow: 0 0 5px #fcee0a, 0 0 10px #ff7b00;
+        ================================================================================
+*/
+        .bounty-tag {
+            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.7); /* 默认半透明黑底 */
+            border: 1px solid var(--cy-yellow); /* 默认黄色边框 */
+            color: var(--cy-yellow); /* 默认黄字 */
+            box-shadow: 0 2px 10px rgba(252,238,10,0.4); /* 默认淡淡黄色发光 */
+            backdrop-filter: blur(4px); /* 背景毛玻璃模糊效果 */
+            animation: tag-breathe 1s infinite alternate; /* 绑定下方的心跳呼吸动画 */
+        }
+
+        /* 奖金牌的专属心跳发光动画 */
+        @keyframes tag-breathe {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(252,238,10,0.4); }
+            100% { transform: scale(1.05); box-shadow: 0 0 15px rgba(252,238,10,0.8), 0 0 20px rgba(255,42,42,0.5); }
+        }
         .c-score { font-size: 36px; font-weight: bold; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5); line-height: 1; margin-bottom: 10px; font-family: 'Oswald'; }
         .streak-label { position: absolute; top: 0; left: 0; width: 100%; background: var(--glow-color); color: #000; text-align: center; font-size: 14px; font-weight: 900; padding: 6px 0; z-index: 3; box-shadow: 0 2px 10px var(--glow-color); }
         .vs-center { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40px; z-index: 10; margin: 0 -15px; }
@@ -522,6 +558,10 @@
             <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名连胜阈值:</span> <input type="number" id="rule-streak" value="3" style="width: 60px; padding: 5px;"></div>
             <div style="display:flex; justify-content:space-between; font-size:13px;"><span>终结红名赏金:</span> <input type="number" id="rule-bounty" value="2" style="width: 60px; padding: 5px;"></div>
             <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名后胜局分:</span> <input type="number" step="0.5" id="rule-reduced" value="0.5" style="width: 60px; padding: 5px;"></div>
+<!-- 新增：动态递增分数设置区 -->
+            <hr style="border-color: #333; margin: 10px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--cy-cyan); font-weight:bold;"><span>🔄 连胜递增分数 (X):</span> <input type="number" step="0.5" id="rule-streak-inc" value="0.5" style="width: 60px; padding: 5px;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--cy-yellow); font-weight:bold;"><span>💸 终结赏金递增 (Y):</span> <input type="number" step="0.5" id="rule-bounty-inc" value="1" style="width: 60px; padding: 5px;"></div>
             <button class="btn-prime" onclick="saveRules()" style="margin-top: 15px; background:linear-gradient(90deg, #8E2DE2, #4A00E0);">保存并同步规则</button>
         </div>
         <div class="premium-panel">
@@ -578,7 +618,7 @@
 
     <script>
         const NEON_COLORS = ['#00f3ff', '#ff00ea', '#fcee0a', '#00ff66', '#ff2a2a', '#b026ff', '#ff7b00', '#00ffcc'];
-        let defaultRules = { hh: 1, ll: 1, hl: 1, lh: 3, streakThreshold: 3, bounty: 2, reduced: 0.5, cleanBonus: 2, shutoutBonus: 2 };
+let defaultRules = { hh: 1, ll: 1, hl: 1, lh: 3, streakThreshold: 3, bounty: 2, reduced: 0.5, cleanBonus: 2, shutoutBonus: 2, streakBonusInc: 0.5, bountyInc: 1 };       
 let appData = {
             roomId: "8888", timestamp: 0, // 修改点：永久固定房间号为 8888，初始时间设为0代表主动接收别人的新数据
             rules: { ...defaultRules }, players: [], table: [], queue: [], matches: [],
@@ -609,6 +649,8 @@ function init() {
                     if(!appData.dispatchMode) appData.dispatchMode = 'auto';
                     if(!appData.rules.cleanBonus) appData.rules.cleanBonus = 2;
                     if(!appData.rules.shutoutBonus) appData.rules.shutoutBonus = 2;
+if(appData.rules.streakBonusInc === undefined) appData.rules.streakBonusInc = 0.5;
+                    if(appData.rules.bountyInc === undefined) appData.rules.bountyInc = 1;
                     appData.players.forEach(p => initPlayerStats(p));
                 } catch(e) {}
             }
@@ -691,10 +733,25 @@ function init() {
             else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = appData.rules.hl; }
             else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = appData.rules.lh; winner.upsetWins++; }
             
-            if(winner.streak >= appData.rules.streakThreshold) earnedPoints = appData.rules.reduced;
-            let isBountyKill = false;
-            if(loser.streak >= appData.rules.streakThreshold) { earnedPoints += appData.rules.bounty; isBountyKill = true; winner.bountyKills++; }
+// --- 修复版：X 连胜递增系统 (套上 Number 护盾) ---
+            if(winner.streak >= Number(appData.rules.streakThreshold)) {
+                let overStreak = winner.streak - Number(appData.rules.streakThreshold); 
+                let incX = Number(appData.rules.streakBonusInc) || 0; 
+                earnedPoints = Number(appData.rules.reduced) + (overStreak * incX); 
+            }
             
+            // --- 修复版：Y 终结赏金递增系统 (套上 Number 护盾) ---
+            let isBountyKill = false;
+            if(loser.streak >= Number(appData.rules.streakThreshold)) {
+                let overStreak = loser.streak - Number(appData.rules.streakThreshold); 
+                let incY = Number(appData.rules.bountyInc) || 0; 
+                let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY); 
+                
+                earnedPoints += currentDynamicBounty; 
+                isBountyKill = true; 
+                winner.bountyKills++; 
+            }
+           
             if(winType === 'clean') { earnedPoints += appData.rules.cleanBonus; winner.cleanWins++; }
             if(winType === 'shutout') { earnedPoints += appData.rules.shutoutBonus; winner.shutoutWins++; }
 
@@ -767,27 +824,50 @@ function renderPlayArea() {
             if(appData.table.length < 2) return container.innerHTML = `<div class="premium-panel" style="text-align:center;">等待排队选手上桌<br><button class="btn-prime" style="margin-top:10px;" onclick="showManualDispatchModal()">手动安排对局</button></div>`;
             
             let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]);
-let buildCard = (p, index) => {
-                let isStreak = p.streak >= appData.rules.streakThreshold;
+// 核心修改：传入 opp (对手数据)，以便我们能自动推演出如果打赢对手能拿多少分
+            let buildCard = (p, index, opp) => {
+                let threshold = Number(appData.rules.streakThreshold);
+                let isStreak = p.streak >= threshold;
                 
-                // 【核心修改】：默认所有登场玩家都带发光框（static-neon-glow），并且使用自己的专属颜色
+                // ==========================================
+                // 【超强智慧大脑】：推演该玩家本局正常获胜能拿多少分
+                // ==========================================
+                let expectedPts = 0;
+                // 1. 判断基础等级分
+                if(p.level === 'high' && opp.level === 'high') expectedPts = Number(appData.rules.hh);
+                else if(p.level === 'low' && opp.level === 'low') expectedPts = Number(appData.rules.ll);
+                else if(p.level === 'high' && opp.level === 'low') expectedPts = Number(appData.rules.hl);
+                else if(p.level === 'low' && opp.level === 'high') expectedPts = Number(appData.rules.lh);
+
+                // 2. 如果自己处于连胜红名状态，只能拿“红名后胜局分”，且附加连胜递增分(X)
+                if(p.streak >= threshold) {
+                    let overS = p.streak - threshold;
+                    expectedPts = Number(appData.rules.reduced) + (overS * (Number(appData.rules.streakBonusInc) || 0));
+                }
+                // 3. 如果对手处于红名状态，干掉他还能狂爆“动态终结赏金”(Y)
+                if(opp.streak >= threshold) {
+                    let overS = opp.streak - threshold;
+                    expectedPts += Number(appData.rules.bounty) + (overS * (Number(appData.rules.bountyInc) || 0));
+                }
+                
                 let outerClass = 'static-neon-glow'; 
                 let outerStyle = `--glow-color: ${p.color};`; 
                 let streakLabelHtml = '';
+                let bountyHtml = ''; 
                 
                 if (isStreak) {
-                    // 如果连胜达到了阈值，取消个人颜色的发光，换成火焰特效！
-                    let overStreak = p.streak - appData.rules.streakThreshold; // 算出超出了几局
-                    
-                    if (overStreak <= 0) { outerClass = 'fire-lvl-1'; }       // 刚达到阈值：小火
-                    else if (overStreak <= 2) { outerClass = 'fire-lvl-2'; }  // 超出1-2局：中火
-                    else { outerClass = 'fire-lvl-3'; }                       // 连赢太多了：漫天大火
-                    
-                    // 火焰特效自带颜色，所以清空普通颜色的设定
+                    let overStreak = p.streak - threshold; 
+                    if (overStreak <= 0) { outerClass = 'fire-lvl-1'; }       
+                    else if (overStreak <= 2) { outerClass = 'fire-lvl-2'; }  
+                    else { outerClass = 'fire-lvl-3'; }                       
                     outerStyle = ''; 
                     
-                    // 给连胜文字加上跳动动画，并写死渐变火焰红背景色
                     streakLabelHtml = `<div class="streak-label text-fire-breathe" style="background: linear-gradient(90deg, #cc2b5e, #753a88); color: white; border-bottom: 2px solid #fff; box-shadow: 0 2px 10px #ff0000;">🔥 连胜 ${p.streak} 局</div>`;
+                    
+                    // 【修复：套上 Number() 护盾，防止把 2 和 1 拼接成 21 ！】
+                    let incY = Number(appData.rules.bountyInc) || 0;
+                    let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY);
+                    bountyHtml = `<div class="bounty-tag">💰 终结奖金：${currentDynamicBounty} 分</div>`;
                 }
 
                 return `
@@ -796,14 +876,31 @@ let buildCard = (p, index) => {
                             <div class="c-img-wrapper"><img src="${p.avatar}"></div>
                             ${streakLabelHtml}
                             <div class="c-info-layer">
+                                ${bountyHtml}
                                 <div class="c-name">${p.name}</div>
-                                <div class="c-score">${p.score}</div>
+                                
+                                <!-- 
+                                ================================================================================
+                                【控制台 9：预计胜分提示牌 - 样式调参面板】 (小白专属)
+                                [如何调整外观]：
+                                  1. margin-bottom: 8px;   -> 决定它和下方“判定胜利”按钮的距离。
+                                  2. padding: 4px 10px;    -> 牌子内部留白(胖瘦)。4px是上下，10px是左右。
+                                  3. border-radius: 12px;  -> 圆角。12px是圆弧胶囊，0px是方块。
+                                  4. font-size: 20px;      -> 绿色加分数字（如 +2）的大小。
+                                  5. color: var(--cy-green); -> 分数的颜色，默认毒液绿。
+                                ================================================================================
+                                -->
+                                <div style="font-size:12px; color:#ccc; font-weight:bold; margin-bottom: 8px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 12px; border: 1px solid #444; box-shadow: inset 0 0 5px #000;">
+                                    预计胜分 <span style="color:var(--cy-green); font-size:20px; font-family:'Oswald', sans-serif; margin-left:4px; text-shadow: 0 0 5px rgba(0,255,102,0.5);">+${expectedPts}</span>
+                                </div>
+                                
                                 <button class="btn-prime" style="padding:8px; border-radius:30px;" onclick="startWinFlow(${index})">判定胜利</button>
                             </div>
                         </div>
                     </div>`;
             };
-            container.innerHTML = `<div class="battle-arena">${buildCard(p1, 0)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1)}</div>`;
+            // 核心修改：现在互相把对方的数据传进去了，这样才能算出打赢对方拿多少分
+            container.innerHTML = `<div class="battle-arena">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
 
             document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
                 let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
@@ -979,28 +1076,76 @@ function renderH2H() {
                     let oPct = t===0?50:Math.round((st.l/t)*100);
                     let oppAvg = t > 0 ? Math.floor(st.dur / t) : 0;
                     
+// ================================================================================
+                    // 【控制台 10：1V1 恩怨簿 PK面板 UI像素级调参指南】 (小白专属)
+                    // [左侧进度条]：
+                    //   1. height: 10px; -> 控制彩色进度横条的粗细。
+                    //   2. border-radius: 5px; -> 控制进度条两端的圆角。
+                    // [中间大数字 (胜负总局)]：
+                    //   1. font-size: 42px; -> 控制巨大数字“6”、“4”和“(10)”的大小。
+                    //   2. font-size: 18px; -> 控制边上“(60%)”和“(40%)”的大小。
+                    //   3. color: #00ff00; -> 左边胜利的专属毒液绿 (严格匹配需求)。
+                    //   4. color: #e6004f; -> 右边失败的专属滴血红 (严格匹配需求)。
+                    //   5. color: #ffffff; -> 中间总局的纯白色。
+                    // [右侧头像与名字]：
+                    //   1. font-size: 16px; -> 控制头像下方“名字”的大小。
+                    //   2. margin: 0 0 6px 0 !important; -> 控制头像和下方名字的距离（6px）。
+                    // ================================================================================
+
                     oppHtml += `
-                        <div class="h2h-opponent-row">
-                            <div class="h2h-bar-container">
-                                <div class="h2h-bar-names" style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="font-size:14px; color:#aaa; letter-spacing:0;">总对阵: ${t}局</span>
-                                    <span>VS ${opp.name}</span>
+                        <div class="h2h-opponent-row" style="display:flex; align-items:center; padding: 15px 12px; border-bottom: 1px dashed #333;">
+                            
+                            <!-- ==============================================
+                                 【左侧：数据统计区】
+                            =============================================== -->
+                            <div style="flex: 1; display:flex; flex-direction:column; padding-right: 15px; justify-content: center;">
+                                
+                                <!-- 1. 顶部比例横条 -->
+                                <div style="width: 100%; height: 10px; background: #1a1a1a; border-radius: 5px; display: flex; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);">
+                                    <div style="height:100%; width:${pPct}%; background:${p.color};"></div>
+                                    <div style="height:100%; width:${100-pPct}%; background:${opp.color};"></div>
                                 </div>
-                                <div class="h2h-bar-wrap">
-                                    <div class="h2h-bar-left" style="width:${pPct}%; background:${p.color}"></div>
-                                    <div class="h2h-bar-right" style="width:${100-pPct}%; background:${opp.color}"></div>
+                                
+                                <!-- 2. 中间：巨型胜负数据 -->
+                                <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:'Oswald', sans-serif; font-weight:900; margin-bottom: 8px; line-height: 1;">
+                                    
+                                    <!-- 胜局百分比 与 胜局数 -->
+                                    <div style="display:flex; align-items:baseline; color:#00ff00;">
+                                        <span style="font-size: 18px; margin-right: 4px;">(${pPct}%)</span>
+                                        <span style="font-size: 42px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${st.w}</span>
+                                    </div>
+                                    
+                                    <!-- 总局数 -->
+                                    <div style="color:#ffffff; font-size: 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 4px #000;">
+                                        (${t})
+                                    </div>
+                                    
+                                    <!-- 败局数 与 败局百分比 -->
+                                    <div style="display:flex; align-items:baseline; color:#e6004f;">
+                                        <span style="font-size: 42px; margin-right: 4px; text-shadow: 0 2px 5px rgba(230,0,79,0.4);">${st.l}</span>
+                                        <span style="font-size: 18px;">(${oPct}%)</span>
+                                    </div>
                                 </div>
-                                <div class="h2h-vs-stats">
-                                    <span style="color:var(--cy-green)">胜: ${st.w}局 (${pPct}%)</span>
-                                    <span style="color:var(--cy-red)">负: ${st.l}局 (${oPct}%)</span>
-                                </div>
-                                <div class="h2h-vs-stats" style="color:#ccc; margin-top:4px;">
+                                
+                                <!-- 3. 底部：时间统计 -->
+                                <div style="display:flex; justify-content:space-between; font-size: 11px; font-weight: bold; color:#aaa; font-family:'Noto Sans SC', sans-serif;">
                                     <span>交战总时长: ${fTime(st.dur)}</span>
                                     <span style="color:var(--cy-yellow)">场均: ${fTime(oppAvg)}</span>
                                 </div>
                             </div>
-<!-- 核心修改：右侧对手套上防溢出相框，并注入他本人的专属颜色边框和发光 -->
-                            <div class="h2h-opp-frame" style="border-color: ${opp.color}; box-shadow: 0 0 10px ${opp.color};"><img src="${opp.avatar}"></div>
+                            
+                            <!-- ==============================================
+                                 【右侧：对手头像与名字】
+                            =============================================== -->
+                            <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                                <!-- 头像 (利用margin抹除原本左侧强制的偏移，实现居中) -->
+                                <div class="h2h-opp-frame" style="border-color: ${opp.color}; box-shadow: 0 0 10px ${opp.color}; margin: 0 0 6px 0 !important;">
+                                    <img src="${opp.avatar}">
+                                </div>
+                                <!-- 名字居中白字 -->
+                                <div style="color:#fff; font-size: 16px; font-weight: 900; letter-spacing: 1px; text-align:center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">${opp.name}</div>
+                            </div>
+                            
                         </div>`;
                 }
                 
@@ -1205,6 +1350,8 @@ function exportExcel() {
             document.getElementById('rule-hh').value = appData.rules.hh; document.getElementById('rule-ll').value = appData.rules.ll;
             document.getElementById('rule-hl').value = appData.rules.hl; document.getElementById('rule-lh').value = appData.rules.lh;
             document.getElementById('rule-streak').value = appData.rules.streakThreshold; document.getElementById('rule-bounty').value = appData.rules.bounty; document.getElementById('rule-reduced').value = appData.rules.reduced;
+document.getElementById('rule-streak-inc').value = appData.rules.streakBonusInc !== undefined ? appData.rules.streakBonusInc : 0.5;
+            document.getElementById('rule-bounty-inc').value = appData.rules.bountyInc !== undefined ? appData.rules.bountyInc : 1;
             document.getElementById('rule-clean').value = appData.rules.cleanBonus; document.getElementById('rule-shutout').value = appData.rules.shutoutBonus;
             
             document.getElementById('player-edit-list').innerHTML = appData.players.map(p => `
@@ -1223,6 +1370,8 @@ function exportExcel() {
             appData.rules.hh = parseFloat(document.getElementById('rule-hh').value); appData.rules.ll = parseFloat(document.getElementById('rule-ll').value);
             appData.rules.hl = parseFloat(document.getElementById('rule-hl').value); appData.rules.lh = parseFloat(document.getElementById('rule-lh').value);
             appData.rules.streakThreshold = parseInt(document.getElementById('rule-streak').value); appData.rules.bounty = parseFloat(document.getElementById('rule-bounty').value); appData.rules.reduced = parseFloat(document.getElementById('rule-reduced').value);
+appData.rules.streakBonusInc = parseFloat(document.getElementById('rule-streak-inc').value);
+            appData.rules.bountyInc = parseFloat(document.getElementById('rule-bounty-inc').value);
             appData.rules.cleanBonus = parseFloat(document.getElementById('rule-clean').value); appData.rules.shutoutBonus = parseFloat(document.getElementById('rule-shutout').value);
             saveStateToHistory(); saveLocalAndSync(); alert("规则同步完成。");
         }
