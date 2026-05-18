@@ -106,10 +106,10 @@
         ================================================================================
 */
         .bounty-tag {
-            margin-bottom: 4px;
-            font-size: 13px;
+            margin-bottom: 1px;
+            font-size: 16px;
             font-weight: 900;
-            padding: 4px 10px;
+            padding: 4px 5px;
             border-radius: 12px;
             background: rgba(0, 0, 0, 0.7); /* 默认半透明黑底 */
             border: 1px solid var(--cy-yellow); /* 默认黄色边框 */
@@ -127,7 +127,7 @@
         .c-score { font-size: 36px; font-weight: bold; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5); line-height: 1; margin-bottom: 10px; font-family: 'Oswald'; }
         .streak-label { position: absolute; top: 0; left: 0; width: 100%; background: var(--glow-color); color: #000; text-align: center; font-size: 14px; font-weight: 900; padding: 6px 0; z-index: 3; box-shadow: 0 2px 10px var(--glow-color); }
         .vs-center { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40px; z-index: 10; margin: 0 -15px; }
-        .vs-text { font-size: 60px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
+        .vs-text { font-size: 25px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
 
         /* ==================================================
            【页面一：赛场 - 候补席头像裁剪区】
@@ -500,6 +500,162 @@
             box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
         }
 
+/* 
+/* 
+================================================================================
+【控制台 13：核心赛场 V2卡牌版 - 独立悬浮得分标签 (小白专属调参面板)】
+[目标]：控制图2中 “基础得分”、“红名胜局分” 等发光胶囊的外观。
+
+[排版控制]：
+  1. gap: 8px; -> 胶囊与胶囊之间的上下距离。改大胶囊就分得更开。
+  2. margin-bottom: 15px; -> 这一排胶囊距离下方“胜局可得”黑框的距离。
+
+[独立胶囊外观控制 (.cyber-tag-row)]：
+  1. padding: 6px 15px; -> 决定胶囊的胖瘦。6px是上下高度，15px是左右长度。
+  2. border-radius: 20px; -> 圆角程度。20px就是图2那种纯正的圆头胶囊，改成0px就是方块。
+  3. background: rgba(0,0,0,0.6); -> 胶囊内部的半透明黑底。0.6是透明度。
+  4. border: 1px solid; -> 外部那根发光的边框线粗细。
+
+[备用炫酷特效 (可复制粘贴到下方 .cyber-tag-row 里)]：
+  * 呼吸闪烁特效： animation: tag-breathe 1.5s infinite alternate;
+================================================================================
+*/
+.cyber-tag-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* 胶囊之间的间距 */
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.cyber-tag-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.1px 8px; /* 胶囊内边距 */
+    border-radius: 20px; /* 图2风格的圆头胶囊 */
+    background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
+    backdrop-filter: blur(4px);
+    border: 1.5px solid; /* 边框粗细 */
+}
+
+/* 左侧文字：得分名称 */
+.tag-label { font-size: 13px; font-weight: 900; }
+/* 右侧文字：具体分数 */
+.tag-value { font-size: 16px; font-weight: 900; font-family: 'Oswald', sans-serif; }
+
+/* --- 不同类型得分的颜色与发光配置 --- */
+/* 1. 基础得分 (纯白色) */
+.type-base { border-color: #ffffff; box-shadow: inset 0 0 8px rgba(255,255,255,0.2), 0 0 5px rgba(255,255,255,0.4); }
+.type-base .tag-label, .type-base .tag-value { color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+
+/* 2. 红名胜局分 (赛博粉) */
+.type-red { border-color: var(--cy-pink); box-shadow: inset 0 0 8px rgba(255,0,234,0.2), 0 0 5px rgba(255,0,234,0.4); }
+.type-red .tag-label, .type-red .tag-value { color: var(--cy-pink); text-shadow: 0 0 5px rgba(255,0,234,0.5); }
+
+/* 3. 连胜递增分 (火焰橙) */
+.type-streak { border-color: #ff7b00; box-shadow: inset 0 0 8px rgba(255,123,0,0.2), 0 0 5px rgba(255,123,0,0.4); }
+.type-streak .tag-label, .type-streak .tag-value { color: #ff7b00; text-shadow: 0 0 5px rgba(255,123,0,0.5); }
+
+/* 4. 终结连胜赏金 (滴血红) */
+.type-bounty { border-color: var(--cy-red); box-shadow: inset 0 0 8px rgba(255,42,42,0.2), 0 0 5px rgba(255,42,42,0.4); }
+.type-bounty .tag-label, .type-bounty .tag-value { color: var(--cy-red); }
+
+/* 5. 赏金递增 (闪电黄) */
+.type-bounty-inc { border-color: var(--cy-yellow); box-shadow: inset 0 0 8px rgba(252,238,10,0.2), 0 0 5px rgba(252,238,10,0.4); }
+.type-bounty-inc .tag-label, .type-bounty-inc .tag-value { color: var(--cy-yellow); }
+
+/* 
+================================================================================
+【控制台 14：胜局可得黑框 & 判定胜利大按钮 (小白专属调参面板)】
+[v2-expected-box 黑框调节]：
+  1. padding: 8px 0; -> 上下高度。
+  2. border-radius: 8px; -> 黑框的圆角。改成 20px 就变成圆形的了。
+  3. background: #111; -> 黑色背景的深度。
+
+[v2-win-btn 蓝色大按钮调节]：
+  1. background: linear-gradient(...); -> 按钮的渐变色。目前是图2的淡蓝到深蓝。
+  2. font-size: 18px; -> 按钮里文字的大小。
+  3. padding: 12px 0; -> 按钮的高度。改大变厚，改小变扁。
+================================================================================
+*/
+.v2-expected-box {
+    width: 100%;
+    background: rgba(15, 15, 15, 0.85); /* 深色背景 */
+    border: 1px solid #333; /* 灰色边框 */
+    border-radius: 8px; /* 微圆角 */
+    padding: 3px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; /* “胜局可得”文字颜色 */
+    font-size: 12px;
+    font-weight: 900;
+    margin-bottom: 4px; /* 距离下方按钮的距离 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.v2-expected-num {
+    color: #00ff00; /* 图2中的绿色大数字 */
+    font-size: 45px;
+    font-family: 'Oswald', sans-serif;
+    margin-left: 10px;
+    text-shadow: 0 0 10px rgba(0,255,0,0.4);
+    line-height: 1;
+}
+
+.v2-win-btn {
+    width: 100%;
+    background: linear-gradient(180deg, #66b5ff, #3b82f6); /* 图2 专属高亮渐变蓝 */
+    border: none;
+    border-radius: 30px; /* 图2 专属全圆角 */
+    color: white;
+    font-size: 18px;
+    font-weight: 900;
+    padding: 12px 0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); /* 蓝色发光阴影 */
+    cursor: pointer;
+    transition: 0.2s;
+    letter-spacing: 1px;
+}
+.v2-win-btn:active { transform: scale(0.96); background: #3b82f6; }
+
+/* 
+================================================================================
+【控制台 15：卡牌底部悬浮玩家名字标签 (小白专属调参面板)】
+[目标]：图2最底部那个外围发蓝光的 “汤必达 🔄” 标签
+[调节参数]：
+  1. margin-top: 15px; -> 控制这个名字牌距离上方大卡片的距离。
+  2. border: 2px solid #5fb4ff; -> 控制外边框的颜色（默认浅蓝色）和粗细。
+  3. padding: 6px 25px; -> 名字牌的长度和高度。
+================================================================================
+*/
+.v2-external-name {
+    background: #000;
+    border: 2px solid #5fb4ff; /* 图2专属蓝色边框 */
+    border-radius: 25px;
+    padding: 6px 25px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px; /* 距离上方卡片的间距 */
+    box-shadow: 0 0 12px rgba(95, 180, 255, 0.3);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.v2-external-name:active { transform: scale(0.95); background: #111; }
+.v2-name-text { color: white; font-size: 18px; font-weight: 900; }
+.v2-refresh-icon {
+    background: #3b82f6; /* 图2的蓝色方块底 */
+    border-radius: 4px; /* 图2的小方块圆角 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    color: white;
+}
+
 </style>
 </head>
 <body>
@@ -654,6 +810,20 @@
             <button class="btn-prime" style="margin-top: 15px; background: #222; border: 1px solid #555; color: #ccc;" onclick="document.getElementById('roundModal').style.display='none'">关闭窗口</button>
         </div>
     </div>
+<!-- 换人轮换弹窗 -->
+    <div class="modal-bg" id="subModal">
+        <div class="modal-box">
+            <h3 style="color:var(--cy-cyan); margin-bottom: 5px;">🔄 玩家轮换</h3>
+            <p style="color: #aaa; font-size: 12px; margin-bottom: 15px;">将 <span id="sub-old-name" style="color:#fff; font-weight:bold;"></span> 轮换下场休息<br>(连胜状态将被保留)</p>
+            <select id="sub-select" class="dispatch-select" style="margin-bottom: 15px;">
+                <!-- 下拉框内容由JS动态生成 -->
+            </select>
+            <div class="modal-btn-group" style="flex-direction: row;">
+                <button class="btn-prime" style="flex: 1; background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="confirmSub()">确认上场</button>
+                <button class="btn-prime" style="background: transparent; border:1px solid #555; color:#aaa; flex:1;" onclick="closeModals()">取消</button>
+            </div>
+        </div>
+    </div>
     <div class="modal-bg" id="winMethodModal">
         <div class="modal-box" style="max-width: 380px;">
             <h3 style="color:var(--cy-cyan); margin-bottom: 5px;">战局结算</h3>
@@ -662,6 +832,7 @@
                 <button class="btn-prime" onclick="openConfirmModal('normal')">凭实力正常获胜</button>
                 <button class="btn-prime" style="background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="openConfirmModal('clean')">🔥 一杆清台 (附加额外分)</button>
                 <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200);" onclick="openConfirmModal('shutout')">💀 剃光头 (附加额外分)</button>
+<button class="btn-prime" style="background:linear-gradient(90deg, #ff00ea, #fcee0a); color:#000; text-shadow:none; font-weight:900;" onclick="openConfirmModal('clean_shutout')">🔥💀 一杆清台 + 剃光头 (拿双份附加分)</button>
                 <button class="btn-prime" style="background:linear-gradient(90deg, #f12711, #f5af19);" onclick="openConfirmModal('foul')">对手失误送局 (白球同落等)</button>
                 <button class="btn-prime" style="background: transparent; border:1px solid #555; box-shadow:none; color:#aaa;" onclick="closeModals()">取消返回</button>
             </div>
@@ -743,7 +914,8 @@ let appData = {
                 w.score += pts; w.totalScoreEarned += pts;
                 w.wins++; w.streak++; w.currentLoseStreak = 0;
                 if(w.streak > w.maxWinStreak) w.maxWinStreak = w.streak;
-                if(m.type==='clean') w.cleanWins++; if(m.type==='shutout') w.shutoutWins++;
+                if(m.type==='clean' || m.type==='clean_shutout') w.cleanWins++; 
+             if(m.type==='shutout' || m.type==='clean_shutout') w.shutoutWins++;
                 if(m.type==='normal') w.normalWins++; if(m.type==='foul') w.foulWins++;
                 if(m.wTags && m.wTags.some(t=>t.includes('终结'))) w.bountyKills++;
                 if(w.streak === Number(appData.rules.streakThreshold)) w.timesBounty++;
@@ -919,11 +1091,11 @@ function saveStateToHistory() {
         function openConfirmModal(type) {
             pendingWinContext.type = type; document.getElementById('winMethodModal').style.display = 'none';
             let winner = getPlayer(appData.table[pendingWinContext.index]);
-            let textMap = { 'normal': '凭实力正常获胜', 'clean': '一杆清台 (享附加分)', 'shutout': '剃光头 (享附加分)', 'foul': '对手失误导致获胜' };
+            let textMap = { 'normal': '凭实力正常获胜', 'clean': '一杆清台 (享附加分)', 'shutout': '剃光头 (享附加分)', 'clean_shutout': '一杆清台 + 剃光头 (拿双份附加分)', 'foul': '对手失误导致获胜' };
             document.getElementById('confirm-msg').innerHTML = `判定 <b>${winner.name}</b> <br><span style="color:var(--cy-cyan);font-size:18px;">[ ${textMap[type]} ]</span>`;
             document.getElementById('confirmModal').style.display = 'flex';
         }
-        function closeModals() { document.getElementById('winMethodModal').style.display = 'none'; document.getElementById('confirmModal').style.display = 'none'; document.getElementById('manualDispatchModal').style.display = 'none'; }
+function closeModals() { document.getElementById('winMethodModal').style.display = 'none'; document.getElementById('confirmModal').style.display = 'none'; document.getElementById('manualDispatchModal').style.display = 'none'; document.getElementById('subModal').style.display = 'none'; }
 
         function executeWinLogic() {
             closeModals();
@@ -947,12 +1119,18 @@ function saveStateToHistory() {
             else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = Number(appData.rules.hl); formulaBase = `(高手赢低手) ${earnedPoints}`; }
             else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = Number(appData.rules.lh); formulaBase = `(低手爆冷高手) ${earnedPoints}`; winner.upsetWins++; }
             
-            // 2. 连胜递增系统 (如果红名，基础分会被强制替换)
+// 2. 连胜递增系统 (完美契合逻辑：单局基础分 + 红名奖励基础分 + 连胜递增滚雪球)
             if(winner.streak >= Number(appData.rules.streakThreshold)) {
                 let overStreak = winner.streak - Number(appData.rules.streakThreshold); 
                 let incX = Number(appData.rules.streakBonusInc) || 0; 
-                earnedPoints = Number(appData.rules.reduced) + (overStreak * incX); 
-                formulaBase = `(红名胜局) ${Number(appData.rules.reduced)}` + (overStreak > 0 ? ` + (连胜递增) ${overStreak * incX}` : '');
+                let redBonus = Number(appData.rules.reduced); // 这是红名后的奖励基础分
+                let streakInc = overStreak * incX; // 这是连胜递增分数
+                
+                // 毫无保留地全部相加！
+                earnedPoints += redBonus + streakInc; 
+                
+                // 将追加的奖励文字完美拼接到历史账单的公式中
+                formulaBonus += ` + (连胜基础奖励) ${redBonus}` + (streakInc > 0 ? ` + (连胜递增奖励) ${streakInc}` : '');
             }
             
             // 3. 终结赏金递增系统
@@ -968,9 +1146,12 @@ function saveStateToHistory() {
                 formulaBonus += ` + (终结赏金) ${currentDynamicBounty}`;
             }
 
-            // 4. 附加特殊胜利方式加分
-            if(winType === 'clean') { let cb = Number(appData.rules.cleanBonus); earnedPoints += cb; formulaBonus += ` + (一杆清台) ${cb}`; winner.cleanWins++; }
-            if(winType === 'shutout') { let sb = Number(appData.rules.shutoutBonus); earnedPoints += sb; formulaBonus += ` + (剃光头) ${sb}`; winner.shutoutWins++; }
+// 4. 附加特殊胜利方式加分 (支持双重加分判定)
+            let isClean = (winType === 'clean' || winType === 'clean_shutout');
+            let isShutout = (winType === 'shutout' || winType === 'clean_shutout');
+
+            if(isClean) { let cb = Number(appData.rules.cleanBonus); earnedPoints += cb; formulaBonus += ` + (一杆清台) ${cb}`; winner.cleanWins++; }
+            if(isShutout) { let sb = Number(appData.rules.shutoutBonus); earnedPoints += sb; formulaBonus += ` + (剃光头) ${sb}`; winner.shutoutWins++; }
 
             // 5. 将文本组装成最终的精美 HTML 公式！
             let scoreFormula = `${formulaBase}${formulaBonus} = <span style="color:var(--cy-yellow); font-size:15px; font-family:'Oswald', sans-serif;">${earnedPoints} 分</span>`;
@@ -981,19 +1162,17 @@ let wTags = []; let lTags = [];
             if(winner.wins === 0) {
                 wTags.push('首胜');
             } else if(winner.streak >= 1) {
-                // 如果当前连胜>=1，说明加上这局，即将变成连胜2次及以上，我们打上 xN 的标签
                 wTags.push(`连胜x${winner.streak + 1}`);
             }
             if(isBountyKill) wTags.push('终结连胜');
-            if(winType === 'clean') wTags.push('一杆清台');
-            if(winType === 'shutout') wTags.push('剃光头');
+            if(isClean) wTags.push('一杆清台'); // 使用双重判定参数
+            if(isShutout) wTags.push('剃光头'); // 使用双重判定参数
 
             // --- 败者标签逻辑 ---
             if(loser.currentLoseStreak >= 1) {
-                // 同理，加上这局就要变成连败2次及以上了
                 lTags.push(`连败x${loser.currentLoseStreak + 1}`);
             }
-            if(winType === 'shutout') lTags.push('被剃光头'); // 【新增】被剃头标签
+            if(isShutout) lTags.push('被剃光头'); // 【新增】被剃头标签
             if(winType === 'foul') lTags.push('自爆');       // 【新增】失误送局标签
 
             winner.score += earnedPoints; winner.totalScoreEarned += earnedPoints;
@@ -1182,38 +1361,119 @@ container.innerHTML = svgHtml + avatarsHtml;
             restore(); // 画完必须恢复真实数据！
         }
 
-function renderPlayArea() {
+// 记录正在操作换人的上下文
+        let pendingSubContext = { tableIndex: -1, oldPlayerId: '' };
+
+        function openSubModal(pid, tableIndex) {
+            let p = getPlayer(pid);
+            if(!p) return;
+            pendingSubContext = { tableIndex: tableIndex, oldPlayerId: pid };
+            document.getElementById('sub-old-name').innerText = p.name;
+            
+            // 找出在队列中，且状态不是 resting 的玩家
+            let availablePlayers = appData.queue.filter(id => {
+                let qp = getPlayer(id);
+                return qp && qp.status === 'active';
+            });
+            
+            if(availablePlayers.length === 0) {
+                alert("候补席目前没有可用的活跃玩家！请先将休息中的玩家设为可用。");
+                return;
+            }
+
+            let opts = availablePlayers.map(id => {
+                let qp = getPlayer(id);
+                // 提示该玩家当前的连胜状态
+                let streakText = qp.streak > 0 ? ` (当前连胜:${qp.streak})` : '';
+                return `<option value="${id}">${qp.name}${streakText}</option>`;
+            }).join('');
+            
+            document.getElementById('sub-select').innerHTML = opts;
+            document.getElementById('subModal').style.display = 'flex';
+        }
+
+        function confirmSub() {
+            let newId = document.getElementById('sub-select').value;
+            let oldId = pendingSubContext.oldPlayerId;
+            let idx = pendingSubContext.tableIndex;
+            
+            if(!newId) return closeModals();
+
+            // 1. 把新玩家从 queue 里拿出来
+            appData.queue = appData.queue.filter(id => id !== newId);
+            // 2. 把老玩家放进 queue 里
+            appData.queue.push(oldId);
+            // 3. 在桌子上进行替换
+            appData.table[idx] = newId;
+
+            // 保存并刷新
+            saveStateToHistory(); 
+            saveLocalAndSync(); 
+            updateAllUI(); 
+            closeModals();
+        }
+
+        function renderPlayArea() {
             document.getElementById('current-game-num').innerText = `第 ${appData.matches.length + 1} 局`;
             let container = document.getElementById('play-area');
             if(appData.table.length < 2) return container.innerHTML = `<div class="premium-panel" style="text-align:center;">等待排队选手上桌<br><button class="btn-prime" style="margin-top:10px;" onclick="showManualDispatchModal()">手动安排对局</button></div>`;
             
             let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]);
-// 核心修改：传入 opp (对手数据)，以便我们能自动推演出如果打赢对手能拿多少分
+
             let buildCard = (p, index, opp) => {
                 let threshold = Number(appData.rules.streakThreshold);
                 let isStreak = p.streak >= threshold;
                 
-                // ==========================================
-                // 【超强智慧大脑】：推演该玩家本局正常获胜能拿多少分
-                // ==========================================
                 let expectedPts = 0;
-                // 1. 判断基础等级分
-                if(p.level === 'high' && opp.level === 'high') expectedPts = Number(appData.rules.hh);
-                else if(p.level === 'low' && opp.level === 'low') expectedPts = Number(appData.rules.ll);
-                else if(p.level === 'high' && opp.level === 'low') expectedPts = Number(appData.rules.hl);
-                else if(p.level === 'low' && opp.level === 'high') expectedPts = Number(appData.rules.lh);
+                // 我们不再用普通数组装字符串，而是用对象装配数据，以便后面生成独立标签
+                let detailArr = []; 
+                
+                // 1. 基础得分
+                let basePts = 0;
+                if(p.level === 'high' && opp.level === 'high') basePts = Number(appData.rules.hh);
+                else if(p.level === 'low' && opp.level === 'low') basePts = Number(appData.rules.ll);
+                else if(p.level === 'high' && opp.level === 'low') basePts = Number(appData.rules.hl);
+                else if(p.level === 'low' && opp.level === 'high') basePts = Number(appData.rules.lh);
+                
+                expectedPts += basePts;
+                detailArr.push({ label: '基础得分', val: `+${basePts}`, type: 'base' });
 
-                // 2. 如果自己处于连胜红名状态，只能拿“红名后胜局分”，且附加连胜递增分(X)
+                // 2. 连胜奖励系统
                 if(p.streak >= threshold) {
                     let overS = p.streak - threshold;
-                    expectedPts = Number(appData.rules.reduced) + (overS * (Number(appData.rules.streakBonusInc) || 0));
-                }
-                // 3. 如果对手处于红名状态，干掉他还能狂爆“动态终结赏金”(Y)
-                if(opp.streak >= threshold) {
-                    let overS = opp.streak - threshold;
-                    expectedPts += Number(appData.rules.bounty) + (overS * (Number(appData.rules.bountyInc) || 0));
+                    let incX = Number(appData.rules.streakBonusInc) || 0;
+                    let streakIncTotal = overS * incX; 
+                    let redBonus = Number(appData.rules.reduced); 
+                    
+                    expectedPts += redBonus + streakIncTotal; 
+                    
+                    detailArr.push({ label: '连胜基础奖励', val: `+${redBonus}`, type: 'red' });
+                    if(streakIncTotal > 0) detailArr.push({ label: '连胜递增奖励', val: `+${streakIncTotal}`, type: 'streak' });
                 }
                 
+                // 3. 终结对手赏金
+                if(opp.streak >= threshold) {
+                    let overS = opp.streak - threshold;
+                    let incY = Number(appData.rules.bountyInc) || 0;
+                    let baseBounty = Number(appData.rules.bounty);
+                    let bountyTotalInc = overS * incY; 
+                    
+                    expectedPts += baseBounty + bountyTotalInc;
+                    
+                    detailArr.push({ label: '终结连胜基础奖励', val: `+${baseBounty}`, type: 'bounty' });
+                    if(bountyTotalInc > 0) detailArr.push({ label: '终结连胜递增赏金', val: `+${bountyTotalInc}`, type: 'bounty-inc' });
+                }
+                
+                // 【核心修改】：生成一行一行的独立悬浮标签！没有黑框！
+                let finalDetailText = `<div class="cyber-tag-container">` + 
+                    detailArr.map(item => `
+                        <div class="cyber-tag-row type-${item.type}">
+                            <div class="tag-label">${item.label}</div>
+                            <div class="tag-value">${item.val}</div>
+                        </div>
+                    `).join("") + 
+                `</div>`;
+
                 let outerClass = 'static-neon-glow'; 
                 let outerStyle = `--glow-color: ${p.color};`; 
                 let streakLabelHtml = '';
@@ -1228,48 +1488,70 @@ function renderPlayArea() {
                     
                     streakLabelHtml = `<div class="streak-label text-fire-breathe" style="background: linear-gradient(90deg, #cc2b5e, #753a88); color: white; border-bottom: 2px solid #fff; box-shadow: 0 2px 10px #ff0000;">🔥 连胜 ${p.streak} 局</div>`;
                     
-                    // 【修复：套上 Number() 护盾，防止把 2 和 1 拼接成 21 ！】
                     let incY = Number(appData.rules.bountyInc) || 0;
                     let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY);
                     bountyHtml = `<div class="bounty-tag">💰 终结奖金：${currentDynamicBounty} 分</div>`;
                 }
 
+// ==================================================
+                // 【此处是 V2 版本的全新卡牌 HTML 生成结构】
+                // 1比1 复刻图2：照片作为全屏底图，文字悬浮在上，名字置于外侧底部
+                // ==================================================
                 return `
-                    <div class="combatant-outer ${outerClass}" style="${outerStyle}">
-                        <div class="combatant">
-                            <div class="c-img-wrapper"><img src="${p.avatar}"></div>
-                            ${streakLabelHtml}
-                            <div class="c-info-layer">
-                                ${bountyHtml}
-                                <div class="c-name">${p.name}</div>
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%;">
+                        
+                        <!-- 主卡片区域 (包含了背景图、黑渐变、和所有得分信息) -->
+                        <div class="combatant-outer ${outerClass}" style="${outerStyle}; position: relative; border-radius: 12px; overflow: hidden; width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 500px;">
+                            
+                            <!-- 1. 绝对定位的全屏背景图 (被设在最底层 z-index: 0) -->
+                            <div class="c-img-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+                                <img src="${p.avatar}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%;">
+                            </div>
+
+                            <!-- 2. 底部黑色渐变遮罩 (让文字能清晰可见，图2必备) -->
+                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.95) 100%); z-index: 1; pointer-events: none;"></div>
+
+                            <!-- 3. 前景内容区 (悬浮在图片和遮罩上方 z-index: 2) -->
+                            <div style="position: relative; z-index: 2; padding: 12px 15px; display: flex; flex-direction: column; align-items: center; width: 100%;">
                                 
-                                <!-- 
-                                ================================================================================
-                                【控制台 9：预计胜分提示牌 - 样式调参面板】 (小白专属)
-                                [如何调整外观]：
-                                  1. margin-bottom: 8px;   -> 决定它和下方“判定胜利”按钮的距离。
-                                  2. padding: 4px 10px;    -> 牌子内部留白(胖瘦)。4px是上下，10px是左右。
-                                  3. border-radius: 12px;  -> 圆角。12px是圆弧胶囊，0px是方块。
-                                  4. font-size: 20px;      -> 绿色加分数字（如 +2）的大小。
-                                  5. color: var(--cy-green); -> 分数的颜色，默认毒液绿。
-                                ================================================================================
-                                -->
-                                <div style="font-size:12px; color:#ccc; font-weight:bold; margin-bottom: 8px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 12px; border: 1px solid #444; box-shadow: inset 0 0 5px #000;">
-                                    预计胜分 <span style="color:var(--cy-green); font-size:20px; font-family:'Oswald', sans-serif; margin-left:4px; text-shadow: 0 0 5px rgba(0,255,102,0.5);">+${expectedPts}</span>
+                                <!-- 赏金标签 (只在红名时显示) -->
+                                ${bountyHtml ? `<div style="margin-bottom: 12px; z-index:3;">${bountyHtml}</div>` : ''}
+
+                                <!-- 独立悬浮得分胶囊 (对应图2的基础得分、红名分等) -->
+                                ${finalDetailText}
+                                
+                                <!-- 底部总分黑框展示区 -->
+                                <div class="v2-expected-box">
+                                    胜局可得 <span class="v2-expected-num">+${expectedPts}</span>
                                 </div>
                                 
-                                <button class="btn-prime" style="padding:8px; border-radius:30px;" onclick="startWinFlow(${index})">判定胜利</button>
+                                <!-- 判定胜利大蓝按钮 -->
+                                <button class="v2-win-btn" onclick="startWinFlow(${index})">判定胜利</button>
+                            </div>
+
+                            <!-- 顶部的连胜特效横条 (绝对定位在卡片顶部) -->
+                            ${streakLabelHtml}
+                        </div>
+
+                        <!-- 4. 卡片外部：独立的名字与轮换标签 (对应图2最底部的 汤必达🔄) -->
+                        <div class="v2-external-name" onclick="openSubModal('${p.id}', ${index})">
+                            <span class="v2-name-text">${p.name}</span>
+                            <div class="v2-refresh-icon">
+                                <!-- 手绘的精准刷新 SVG 矢量小图标 -->
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-8.31l5.67-5.67"/>
+                                </svg>
                             </div>
                         </div>
+
                     </div>`;
             };
-            // 核心修改：现在互相把对方的数据传进去了，这样才能算出打赢对方拿多少分
-            container.innerHTML = `<div class="battle-arena">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
+
+            container.innerHTML = `<div class="battle-arena" style="height:auto; min-height:480px;">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
 
             document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
                 let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
                 return `<div class="q-item ${isResting ? 'is-resting' : ''}">
-                    <!-- 核心修改：套上防溢出相框 -->
                     <div class="q-avatar-frame" onclick="toggleRest('${p.id}')"><img src="${p.avatar}"></div>
                     <div class="q-name">${p.name}</div>
                     <div class="rest-btn" onclick="toggleRest('${p.id}')">${isResting ? '休息中' : '可上场'}</div>
@@ -1423,8 +1705,24 @@ function renderH2H() {
                 let oppStats = {}; 
                 matchesInvolved.forEach(m => {
                     let oppId = m.p1 === p.id ? m.p2 : m.p1;
-                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0, dur: 0 };
-                    if(m.winner === p.id) oppStats[oppId].w++; else oppStats[oppId].l++;
+                    
+                    // 【核心新增】：初始化积分数据记录库 pPts(我赢的分), oPts(被对手赢的分)
+                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0, dur: 0, pPts: 0, oPts: 0 };
+                    
+                    // 兼容旧数据的分数提取逻辑
+                    let earned = m.earnedPoints;
+                    if(earned === undefined) {
+                        if(m.scoreFormula) { let match = m.scoreFormula.match(/>\s*(-?\d+(\.\d+)?)\s*分/); earned = match ? parseFloat(match[1]) : 1; } 
+                        else earned = 1;
+                    }
+
+                    if(m.winner === p.id) {
+                        oppStats[oppId].w++;
+                        oppStats[oppId].pPts += earned; // 赢了，把分数加到我方金库
+                    } else {
+                        oppStats[oppId].l++;
+                        oppStats[oppId].oPts += earned; // 输了，把分数加到敌方金库
+                    }
                     oppStats[oppId].dur += (m.duration || 0); 
                 });
 
@@ -1440,21 +1738,10 @@ function renderH2H() {
                     let oPct = t===0?50:Math.round((st.l/t)*100);
                     let oppAvg = t > 0 ? Math.floor(st.dur / t) : 0;
                     
-// ================================================================================
-                    // 【控制台 10：1V1 恩怨簿 PK面板 UI像素级调参指南】 (小白专属)
-                    // [左侧进度条]：
-                    //   1. height: 10px; -> 控制彩色进度横条的粗细。
-                    //   2. border-radius: 5px; -> 控制进度条两端的圆角。
-                    // [中间大数字 (胜负总局)]：
-                    //   1. font-size: 42px; -> 控制巨大数字“6”、“4”和“(10)”的大小。
-                    //   2. font-size: 18px; -> 控制边上“(60%)”和“(40%)”的大小。
-                    //   3. color: #00ff00; -> 左边胜利的专属毒液绿 (严格匹配需求)。
-                    //   4. color: #e6004f; -> 右边失败的专属滴血红 (严格匹配需求)。
-                    //   5. color: #ffffff; -> 中间总局的纯白色。
-                    // [右侧头像与名字]：
-                    //   1. font-size: 16px; -> 控制头像下方“名字”的大小。
-                    //   2. margin: 0 0 6px 0 !important; -> 控制头像和下方名字的距离（6px）。
-                    // ================================================================================
+                    // 【核心新增】：计算积分的百分比占比
+                    let totalPts = st.pPts + st.oPts;
+                    let pPtsPct = totalPts === 0 ? 50 : Math.round((st.pPts / totalPts) * 100);
+                    let oPtsPct = totalPts === 0 ? 50 : Math.round((st.oPts / totalPts) * 100);
 
                     oppHtml += `
                         <div class="h2h-opponent-row" style="display:flex; align-items:center; padding: 15px 12px; border-bottom: 1px dashed #333;">
@@ -1472,26 +1759,55 @@ function renderH2H() {
                                 
                                 <!-- 2. 中间：巨型胜负数据 -->
                                 <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:'Oswald', sans-serif; font-weight:900; margin-bottom: 8px; line-height: 1;">
-                                    
-                                    <!-- 胜局百分比 与 胜局数 -->
                                     <div style="display:flex; align-items:baseline; color:#00ff00;">
                                         <span style="font-size: 18px; margin-right: 4px;">(${pPct}%)</span>
                                         <span style="font-size: 42px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${st.w}</span>
                                     </div>
-                                    
-                                    <!-- 总局数 -->
                                     <div style="color:#ffffff; font-size: 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 4px #000;">
                                         (${t})
                                     </div>
-                                    
-                                    <!-- 败局数 与 败局百分比 -->
                                     <div style="display:flex; align-items:baseline; color:#e6004f;">
                                         <span style="font-size: 42px; margin-right: 4px; text-shadow: 0 2px 5px rgba(230,0,79,0.4);">${st.l}</span>
                                         <span style="font-size: 18px;">(${oPct}%)</span>
                                     </div>
                                 </div>
                                 
-                                <!-- 3. 底部：时间统计 -->
+                                <!-- ================================================================================
+                                     【控制台 14：1V1 积分提款机面板 调参指南】 (小白专属)
+                                     
+                                     [1. 外围黑板框]：
+                                     background: rgba(0,0,0,0.5); -> 面板的底色，改0.5可以调整透明度。
+                                     padding: 6px 8px; -> 面板的内部留白（变胖变瘦）。
+                                     
+                                     [2. 文字大小与颜色]：
+                                     font-size: 12px; -> 控制“掠夺积分”等中文文字的大小。
+                                     color: var(--cy-yellow); -> 我方掠夺积分的颜色（默认赛博黄，你也可以改成 #00ff00 绿色）。
+                                     color: #aaa; -> 敌方掠夺我方积分的颜色（默认灰色，你也可以改成 #ff2a2a 红色）。
+                                     
+                                     [3. 迷你积分进度条]：
+                                     height: 4px; -> 控制这条积分比例线的粗细。觉得太细可以改成 6px。
+                                     margin-top: 5px; -> 进度条距离上方文字的距离。
+                                     background: var(--cy-yellow); -> 我方占有比例的进度条颜色。
+                                ================================================================================ -->
+                                <div style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px;">
+                                    <div style="display:flex; justify-content:space-between; font-size: 12px; font-weight: bold; font-family:'Noto Sans SC', sans-serif;">
+                                        <!-- 我方掠夺 -->
+                                        <span style="color:var(--cy-yellow);">
+                                            掠夺分: <span style="font-family:'Oswald'; font-size:15px; margin-left:2px;">${st.pPts}</span> (${pPtsPct}%)
+                                        </span>
+                                        <!-- 被敌方掠夺 -->
+                                        <span style="color:#aaa;">
+                                            被夺: <span style="font-family:'Oswald'; font-size:15px; margin-left:2px;">${st.oPts}</span> (${oPtsPct}%)
+                                        </span>
+                                    </div>
+                                    <!-- 迷你积分比例条 -->
+                                    <div style="width: 100%; height: 4px; background: #222; border-radius: 2px; display: flex; overflow: hidden; margin-top: 5px;">
+                                        <div style="height:100%; width:${pPtsPct}%; background:var(--cy-yellow); box-shadow: 0 0 5px var(--cy-yellow);"></div>
+                                        <div style="height:100%; width:${100-pPtsPct}%; background:#444;"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 4. 底部：时间统计 -->
                                 <div style="display:flex; justify-content:space-between; font-size: 11px; font-weight: bold; color:#aaa; font-family:'Noto Sans SC', sans-serif;">
                                     <span>交战总时长: ${fTime(st.dur)}</span>
                                     <span style="color:var(--cy-yellow)">场均: ${fTime(oppAvg)}</span>
@@ -1502,11 +1818,9 @@ function renderH2H() {
                                  【右侧：对手头像与名字】
                             =============================================== -->
                             <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
-                                <!-- 头像 (利用margin抹除原本左侧强制的偏移，实现居中) -->
                                 <div class="h2h-opp-frame" style="border-color: ${opp.color}; box-shadow: 0 0 10px ${opp.color}; margin: 0 0 6px 0 !important;">
                                     <img src="${opp.avatar}">
                                 </div>
-                                <!-- 名字居中白字 -->
                                 <div style="color:#fff; font-size: 16px; font-weight: 900; letter-spacing: 1px; text-align:center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">${opp.name}</div>
                             </div>
                             
@@ -1516,7 +1830,6 @@ function renderH2H() {
                 html += `
                     <div class="player-h2h-section" style="--player-color: ${p.color};">
                         <div class="h2h-owner">
-                            <!-- 核心修改：左侧主视角套上防溢出相框 -->
                             <div class="h2h-owner-frame" style="box-shadow: 0 0 10px ${p.color};"><img src="${p.avatar}"></div>
                             <div class="h2h-owner-info">
                                 <div class="h2h-owner-name">${p.name}</div>
@@ -1670,7 +1983,7 @@ function exportExcel() {
             let wb = XLSX.utils.book_new();
             
             let matchData = [["局数", "时间", "胜者", "败者", "获胜方式", "耗时(秒)"]];
-            let tMap = { 'normal': '正常', 'clean': '清台', 'shutout': '剃头', 'foul': '失误' };
+            let tMap = { 'normal': '正常', 'clean': '清台', 'shutout': '剃头', 'clean_shutout': '清台+剃头', 'foul': '失误' };
             appData.matches.forEach((m, i) => {
                 let w = getPlayer(m.winner); let l = getPlayer(m.winner===m.p1?m.p2:m.p1);
                 matchData.push([i+1, new Date(m.ts).toLocaleString(), w?w.name:'', l?l.name:'', tMap[m.type]||'未知', m.duration||0]);
