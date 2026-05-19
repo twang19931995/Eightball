@@ -14,8 +14,7 @@
             --cy-red: #ff2a2a; --cy-green: #00ff66; --cy-dark: #090a0f;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans SC', sans-serif; user-select: none; }
-        body { background-color: var(--cy-dark); background-image: radial-gradient(circle at 50% 0%, #171d33 0%, var(--cy-dark) 60%); color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
+body { background-color: var(--cy-dark); background-image: radial-gradient(circle at 50% 0%, #171d33 0%, var(--cy-dark) 60%); color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         /* ==================================================
            【全局静态高光机制】 (已移除呼吸灯动画)
            供所有需要发光的玩家卡片使用
@@ -27,7 +26,7 @@
 
         .premium-panel { background: linear-gradient(135deg, rgba(16, 20, 30, 0.95), rgba(25, 30, 45, 0.85)); border-top: 2px solid var(--cy-cyan); border-bottom: 2px solid var(--cy-pink); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 2px 15px rgba(0, 243, 255, 0.1); border-radius: 4px; padding: 15px; margin-bottom: 15px; backdrop-filter: blur(10px); }
         .title-glow { font-weight: 900; text-align: center; margin-bottom: 20px; font-size: 24px; background: linear-gradient(90deg, var(--cy-cyan), var(--cy-pink)); -webkit-background-clip: text; color: transparent; letter-spacing: 3px; text-shadow: 0px 4px 20px rgba(255,0,234,0.4); }
-        .page-container { flex: 1; overflow-y: auto; padding: 15px 15px 90px 15px; display: none; animation: fadeIn 0.4s forwards; }
+        .page-container { flex: 1; padding: 15px 15px 90px 15px; display: none; animation: fadeIn 0.4s forwards; }
         .page-container.active { display: block; }
         @keyframes fadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         .number-font { font-family: 'Oswald', sans-serif; }
@@ -712,6 +711,18 @@
             <button class="timer-btn" id="btn-start-timer" onclick="startTimer()">开始计时</button>
         </div>
         <div id="play-area"></div>
+        
+        <!-- ================================================================================
+             【控制台 27：核心赛场 规则讲解区 UI调参面板】(小白专属)
+             [排版控制]：
+             1. padding: 10px; -> 控制面板内部的上下左右留白。
+             2. margin-bottom: 15px; -> 控制规则面板和下方“候补席”的间距。
+             3. font-size: 11px; -> 下方 JS 里控制了规则文字的大小。如果觉得小，可以在下方的 JS 代码里改成 12px。
+             4. gap: 6px; -> 每行规则之间的上下缝隙。
+        ================================================================================ -->
+        <div class="premium-panel" style="padding: 10px; margin-bottom: 15px;" id="rules-panel-container">
+            <!-- 这里的规则内容将由底下的 JS 自动读取并填入 -->
+        </div>
         <div class="premium-panel" style="padding: 10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                 <h4 style="font-size: 14px; color: var(--cy-cyan);">📋 候补与休息序列</h4>
@@ -802,6 +813,32 @@
             <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">👥 参赛选手登记与专属颜色</label>
             <div id="player-edit-list" style="margin-top:10px;"></div>
             <button class="btn-prime" onclick="addPlayerForm()" style="margin-top: 10px;">+ 录入新选手</button>
+        </div>
+<!-- ================================================================================
+             新增：历史对局时间修改器 面板
+        ================================================================================ -->
+        <div class="premium-panel" style="border-top: 2px solid #f7971e; border-bottom: 2px solid #ffd200;">
+            <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">⏱️ 历史对局时间修正</label>
+            <p style="font-size:10px; color:#888; margin-top:5px;">如遇忘记暂停导致单局耗时过长，或发生时间错误，可在此修正。</p>
+            
+            <select id="edit-match-select" class="dispatch-select" style="margin-top:10px;" onchange="loadMatchForEdit()">
+                <option value="-1">请选择要修改的对局...</option>
+            </select>
+            
+            <!-- 默认隐藏，选择了某局之后才会显示这里的修改框 -->
+            <div id="edit-match-area" style="display:none; margin-top:10px; background:rgba(0,0,0,0.5); padding:10px; border-radius:6px; border:1px dashed #555;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                    <span style="font-size:13px; color:#ccc;">对局耗时(秒):</span>
+                    <!-- 这里可以自己填入正确的秒数 -->
+                    <input type="number" id="edit-match-duration" style="width:120px; padding:5px; margin:0; text-align:center;">
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                    <span style="font-size:13px; color:#ccc;">发生时间:</span>
+                    <!-- 这里可以修改这局发生的时间 -->
+                    <input type="datetime-local" id="edit-match-time" style="width:180px; padding:5px; margin:0; font-size:12px;">
+                </div>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200); color:#000; font-weight:900;" onclick="saveMatchEdit()">💾 保存修改并同步数据</button>
+            </div>
         </div>
         <button class="btn-prime btn-alert" onclick="resetGame()" style="margin-top: 30px;">⚠️ 清空所有战绩并重置开局</button>
     </div>
@@ -1596,6 +1633,30 @@ container.innerHTML = svgHtml + avatarsHtml;
 
             container.innerHTML = `<div class="battle-arena" style="height:auto; min-height:480px;">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
 
+// --- 新增：自动读取并渲染规则讲解区 ---
+            document.getElementById('rules-panel-container').innerHTML = `
+                <div style="font-size:13px; font-weight:900; color:var(--cy-cyan); margin-bottom:8px; text-shadow:0 0 5px rgba(0,243,255,0.4);">📜 战局积分规则</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:11px; font-weight:bold; color:#ccc;">
+                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid #fff;">
+                        基础分：同级 <span style="color:#fff;">${appData.rules.hh} 分</span> &nbsp;|&nbsp; 
+                        高赢低 <span style="color:#fff;">${appData.rules.hl} 分</span> &nbsp;|&nbsp; 
+                        低赢高 <span style="color:var(--cy-red);">${appData.rules.lh} 分</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid #ff7b00;">
+                        连胜基础奖励：<span style="color:#ff7b00;">${appData.rules.reduced} 分</span> &nbsp;|&nbsp; 
+                        每多连胜一局递增：<span style="color:#ff7b00;">${appData.rules.streakBonusInc} 分</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid var(--cy-red);">
+                        终结连胜基础奖励：<span style="color:var(--cy-red);">${appData.rules.bounty} 分</span> &nbsp;|&nbsp; 
+                        终结每多连胜递增：<span style="color:var(--cy-red);">${appData.rules.bountyInc} 分</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid var(--cy-yellow);">
+                        一杆清台：<span style="color:var(--cy-yellow);">${appData.rules.cleanBonus} 分</span> &nbsp;|&nbsp; 
+                        剃光头：<span style="color:var(--cy-yellow);">${appData.rules.shutoutBonus} 分</span>
+                    </div>
+                </div>
+            `;
+
             document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
                 let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
                 return `<div class="q-item ${isResting ? 'is-resting' : ''}">
@@ -2157,8 +2218,63 @@ function exportExcel() {
             };
             reader.readAsArrayBuffer(file);
         }
+// ==============================================================================
+        // 新增功能：历史对局时间修改器 专属逻辑
+        // ==============================================================================
+        function updateMatchEditDropdown() {
+            let select = document.getElementById('edit-match-select');
+            if(!select) return;
+            let opts = `<option value="-1">请选择要修改的对局...</option>`;
+            appData.matches.forEach((m, i) => {
+                let p1 = getPlayer(m.p1); let p2 = getPlayer(m.p2);
+                let name1 = p1 ? p1.name : '未知'; let name2 = p2 ? p2.name : '未知';
+                // 下拉菜单显示：第X局 - [张三 VS 李四]
+                opts += `<option value="${i}">第 ${i+1} 局 - [${name1} VS ${name2}]</option>`;
+            });
+            select.innerHTML = opts;
+            document.getElementById('edit-match-area').style.display = 'none';
+        }
+
+        function loadMatchForEdit() {
+            let idx = parseInt(document.getElementById('edit-match-select').value);
+            let area = document.getElementById('edit-match-area');
+            if(idx === -1) { area.style.display = 'none'; return; }
+            
+            let m = appData.matches[idx];
+            document.getElementById('edit-match-duration').value = m.duration || 0; // 填入旧的耗时
+
+            // 将时间戳转换为 datetime-local 认识的格式 (YYYY-MM-DDThh:mm)
+            let d = new Date(m.ts);
+            let pad = (n) => String(n).padStart(2, '0');
+            let ds = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            document.getElementById('edit-match-time').value = ds;
+
+            area.style.display = 'block'; // 显示修改面板
+        }
+
+        function saveMatchEdit() {
+            let idx = parseInt(document.getElementById('edit-match-select').value);
+            if(idx === -1) return;
+            
+            let dur = parseInt(document.getElementById('edit-match-duration').value);
+            let tsStr = document.getElementById('edit-match-time').value;
+
+            if(isNaN(dur) || dur < 0) return alert("耗时必须是大于等于0的数字！");
+            if(!tsStr) return alert("请选择有效的时间！");
+
+            // 覆盖旧数据
+            appData.matches[idx].duration = dur;
+            appData.matches[idx].ts = new Date(tsStr).getTime();
+
+            // 保存到硬盘、同步给其他人、并刷新界面
+            saveStateToHistory();
+            saveLocalAndSync();
+            updateAllUI();
+            alert(`✅ 第 ${idx+1} 局的数据已成功修改！\n相关的风云榜(场均、最长最短时间)、对局详情等已自动同步更新！`);
+        }
 
         function renderSettings() {
+updateMatchEditDropdown(); // 刷新对局时间修改器的下拉菜单
             document.getElementById('rule-hh').value = appData.rules.hh; document.getElementById('rule-ll').value = appData.rules.ll;
             document.getElementById('rule-hl').value = appData.rules.hl; document.getElementById('rule-lh').value = appData.rules.lh;
             document.getElementById('rule-streak').value = appData.rules.streakThreshold; document.getElementById('rule-bounty').value = appData.rules.bounty; document.getElementById('rule-reduced').value = appData.rules.reduced;
