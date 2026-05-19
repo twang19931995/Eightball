@@ -155,7 +155,14 @@
         /* ==================================================
            【页面二：风云榜 - 玩家头像专属颜色描边区】
         ================================================== */
-        .rank-card-outer { margin-bottom: 15px; border-radius: 6px; background: rgba(15,20,30,0.9); }
+        /* ================================================================================
+           【控制台 26：风云榜卡片间距 调参区】(小白专属)
+           [参数修改]：
+           1. margin-bottom: 25px; -> 这里的 25px 控制每个玩家卡片之间的上下空隙！
+              如果觉得不够宽，可以改成 35px；如果觉得太宽，改成 20px。
+           2. box-shadow: 0 4px 15px rgba(0,0,0,0.5); -> 顺手给你加了个外层卡片的高级投影，更有层次感！
+        ================================================================================ */
+        .rank-card-outer { margin-bottom: 25px; border-radius: 6px; background: rgba(15,20,30,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         /* 移除外层卡片的呼吸动画，仅保留发光 */
         .rank-inner { display: flex; min-height: 140px; height: auto; position: relative;} /* 把固定高度改成 auto，让它能自动撑开装下更多数据 */
         .rank-left { width: 100px; position: relative; flex-shrink: 0;}
@@ -163,9 +170,8 @@
         /* 🔥 风云榜左侧玩家头像修改处 🔥 */
         #stats-list .rank-left img { 
             width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            object-position: center 10%; 
+            height: 50%; 
+            object-position: center 0%; 
             border-top-left-radius: 4px; 
             border-bottom-left-radius: 4px;
             /* 描边颜色由内联样式 style="border-color:..." 动态控制，这里不要写死 border-color */
@@ -173,9 +179,9 @@
         }
         
         /* 排名数字角标 */
-        .rank-num { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); font-size: 20px; font-weight: 900; padding: 2px 8px; border-bottom-right-radius: 8px; font-family: 'Oswald'; }
+        .rank-num { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); font-size: 20px; font-weight: 900; padding: 2px 2px; border-bottom-right-radius: 8px; font-family: 'Oswald'; }
         
-        .rank-right { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+        .rank-right { flex: 1; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
         .rank-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .rank-name-box { font-size: 30px; font-weight: 900; color: #fff; }
         .rank-score-box { font-size: 40px; color: var(--cy-yellow); font-family: 'Oswald'; line-height: 1;}
@@ -190,8 +196,31 @@
           4. stat-badge 中的 background: rgba(255,255,255,0.08); -> 小方块的底色透明度。
         ================================================================================
         */
-        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; font-size: 11px; font-weight: bold; }
-        .stat-badge { padding: 3px 4px; border-radius: 4px; background: rgba(255,255,255,0.08); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ================================================================================
+           【控制台 24：风云榜 1比1复刻图1卡牌 UI调参区】(小白专属)
+           [排版控制]：
+           1. grid-template-columns: 1fr 1fr; -> 控制两列等宽。
+           2. gap: 6px 8px; -> 卡片之间的间距。6px是上下距离，8px是左右距离。
+           
+           [内部元素控制 (.stat-badge-v2)]：
+           1. background: #1a1c24; -> 精准提取的图1深空灰蓝底色。
+           2. border-radius: 6px; -> 图1的圆角大小。
+           3. padding: 6px 8px; -> 胶囊内部的上下左右空间。
+           
+           [文字与竖线控制]：
+           1. .s-label 里的 width: 54px; -> 极度关键！固定左边文字的宽度，确保所有竖线在同一条垂直线上完美对齐！
+           2. .s-label 里的 font-size: 12px; -> 左边彩色文字的大小。
+           3. .s-divider 里的 width: 1px; height: 14px; -> 分割竖线的粗细和高矮。
+           4. .s-value 里的 color: #fff; -> 右侧数据纯白色。
+        ================================================================================ */
+        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; margin-top: 10px; }
+        .stat-badge-v2 { display: flex; align-items: center; background: #1a1c24; border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; padding: 2px 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-badge-v2 .s-label { width: 54px; font-size: 12px; font-weight: bold; text-align: left; flex-shrink: 0; letter-spacing: 0.5px; }
+        .stat-badge-v2 .s-divider { width: 1px; height: 14px; background: rgba(255,255,255,0.25); margin: 0 8px 0 2px; flex-shrink: 0; }
+        .stat-badge-v2 .s-value { font-size: 13px; font-weight: bold; color: #fff; text-align: left; flex: 1; white-space: nowrap; font-family: 'Noto Sans SC', sans-serif; letter-spacing: 0.5px;}
+        
+        /* 底部“单局最高分”独立宽格样式 */
+        .stat-badge-full { grid-column: span 2; display: flex; align-items: center; justify-content: center; background: rgba(252,238,10,0.08); border: 1px solid rgba(252,238,10,0.3); border-radius: 6px; padding: 6px 8px; margin-top: 2px;}
         .date-footer-text { text-align: center; color: #888; font-size: 15px; margin-top: 20px; font-weight: bold;}
 
         /* ==================================================
@@ -1052,26 +1081,42 @@ if(appData.rules.streakBonusInc === undefined) appData.rules.streakBonusInc = 0.
         }
 
 function saveStateToHistory() {
-            if (historyIndex < historyStack.length - 1) historyStack = historyStack.slice(0, historyIndex + 1);
+            // 1. 裁切掉当前指针之后的所有未来分支（解决撤销后再打新局导致历史混乱的问题）
+            if (historyIndex < historyStack.length - 1) {
+                historyStack = historyStack.slice(0, historyIndex + 1);
+            }
             
-            // 修复1：防止存入完全一样的数据导致重复撤销时卡住
-            if(historyStack.length > 0 && historyStack[historyStack.length - 1] === JSON.stringify(appData)) return; 
+            // 2. 剔除网络时间戳的影响，进行纯数据比对，防止产生无效的重复历史导致撤销卡死
+            if (historyStack.length > 0) {
+                let curr = {...appData}; delete curr.timestamp;
+                let last = {...JSON.parse(historyStack[historyStack.length - 1])}; delete last.timestamp;
+                if (JSON.stringify(curr) === JSON.stringify(last)) return;
+            }
             
             historyStack.push(JSON.stringify(appData)); 
             historyIndex++; 
             
-            // 修复2：限制历史最多记50步防止手机卡顿；同时把撤销库写进浏览器本地硬盘！
-            // 这样就算刷新网页、不小心关掉浏览器，重新打开依然能撤销！
-            if(historyStack.length > 50) { historyStack.shift(); historyIndex--; }
+            // 3. 彻底解除紧箍咒：放宽到 1000 步！让你随便撤销，再也不会束手束脚！
+            if(historyStack.length > 1000) { historyStack.shift(); historyIndex--; }
             localStorage.setItem('poolHistoryStack', JSON.stringify(historyStack));
             localStorage.setItem('poolHistoryIndex', historyIndex.toString());
             
             updateUndoRedoBtns(); 
         }
+        
         function updateUndoRedoBtns() { document.getElementById('btn-undo').disabled = historyIndex <= 0; document.getElementById('btn-redo').disabled = historyIndex >= historyStack.length - 1; }
         function undo() { if(historyIndex > 0) { historyIndex--; applyHistoryState(); } }
         function redo() { if(historyIndex < historyStack.length - 1) { historyIndex++; applyHistoryState(); } }
-        function applyHistoryState() { appData = JSON.parse(historyStack[historyIndex]); appData.timestamp = Date.now(); saveLocalAndSync(); updateAllUI(); updateUndoRedoBtns(); }
+        
+        function applyHistoryState() { 
+            appData = JSON.parse(historyStack[historyIndex]); 
+            appData.timestamp = Date.now(); 
+            saveLocalAndSync(); 
+            // 🔥 核心终极修复点：撤销和恢复时，必须同步把指针位置存进硬盘！否则一刷新网页它就会跳回以前的位置！
+            localStorage.setItem('poolHistoryIndex', historyIndex.toString()); 
+            updateAllUI(); 
+            updateUndoRedoBtns(); 
+        }
         function saveLocalAndSync() { appData.timestamp = Date.now(); localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); broadcastState(); }
         function getPlayer(id) { return appData.players.find(p => p.id === id); }
 
@@ -1219,12 +1264,14 @@ function updateAllUI() {
             let backupPlayers = appData.players;
             let backupMatches = appData.matches;
             
-            // 魔法：临时把真数据调包成“轮次独立数据”交给页面去渲染！
+            // 🚨 修复Bug核心：【核心赛场】永远是控制台，必须使用当下最真实的绝对数据进行渲染！不参与时光机回溯！
+            renderPlayArea(); 
+            
+            // 魔法：临时把真数据调包成“轮次独立数据”，交给后面的风云榜、荣誉殿堂去渲染历史战绩！
             let filtered = getFilteredData();
             appData.players = filtered.players;
             appData.matches = filtered.matches;
             
-            renderPlayArea(); 
             renderStats(); 
             renderChart(); 
             renderAchievements(); 
@@ -1565,11 +1612,33 @@ function renderStats() {
             let fTime = (s) => isNaN(s) || s === 0 ? '--' : `${Math.floor(s/60)}分${s%60}秒`;
 
             container.innerHTML = sorted.map((p, index) => {
-                let total = p.wins + p.losses; 
+let total = p.wins + p.losses; 
                 let rate = total > 0 ? Math.round((p.wins / total) * 100) : 0;
+                let loseRate = total > 0 ? 100 - rate : 0; // 新增：负局百分比
+
+                // 新增：主动胜利与躺赢百分比计算
+                let activeWins = p.wins - (p.foulWins || 0); // 总胜局减去对手自爆，就是主动胜利
+                let activePct = p.wins > 0 ? Math.round((activeWins / p.wins) * 100) : 0;
+                let foulPct = p.wins > 0 ? 100 - activePct : 0; 
+
                 let playerMatches = appData.matches.filter(m => m.p1 === p.id || m.p2 === p.id);
                 let totalSec = playerMatches.reduce((sum, m) => sum + (m.duration || 0), 0);
                 let avgSec = total > 0 ? Math.floor(totalSec / total) : 0;
+
+                // 新增：遍历出最长一局、最短一局、单局赢取最高分
+                let maxMatchTime = 0;
+                let minMatchTime = Infinity;
+                let maxSingleScore = 0;
+
+                playerMatches.forEach(m => {
+                    if (m.duration > maxMatchTime) maxMatchTime = m.duration;
+                    if (m.duration > 0 && m.duration < minMatchTime) minMatchTime = m.duration;
+                    if (m.winner === p.id) { // 只有自己赢的局才算赢取最高分
+                        let earned = m.earnedPoints || 0;
+                        if (earned > maxSingleScore) maxSingleScore = earned;
+                    }
+                });
+                if (minMatchTime === Infinity) minMatchTime = 0;
 
                 let isLast = index === sorted.length - 1 && sorted.length > 1; 
                 let isFirst = index === 0 && sorted.length > 1;
@@ -1584,16 +1653,55 @@ function renderStats() {
                                 <img src="${p.avatar}" style="${p.status==='resting'?'filter:grayscale(100%);':''}">
                             </div>
                             <div class="rank-right">
-                                <div class="rank-header"><div class="rank-name-box">${p.name} <span style="font-size:10px;color:#aaa;">[${p.level==='high'?'高手':'进阶'}]</span></div><div class="rank-score-box">${p.score}</div></div>
+                                <div class="rank-header"><div class="rank-name-box">${p.name} <span style="font-size:10px;color:#aaa;">[${p.level==='high'?'高手':'进阶'}]</span></div><div class="rank-score-box">${p.score}分</div></div>
+<!-- ================================================================================
+                                     【控制台 25：战绩风云榜 UI极致还原区 (像素级复刻图1)】
+                                     通过 buildV2Card 引擎生成：自动按图1分配左侧标题颜色、白色数据、对应颜色的百分比！
+                                     
+                                     [色值对照表 (如果想微调可以直接改这里)]：
+                                     胜局: #8ee55f (护眼绿)    负局: #fb3b3b (警示红)
+                                     主动: #54ebf7 (赛博青)    躺赢: #d35af6 (荧光紫)
+                                     连胜: #fc15f8 (粉红)      连败: #ffffff (纯白)
+                                     最长: #fd9b27 (橙黄)      最短: #7ff5d8 (薄荷绿)
+                                     上场: #ffde26 (金黄)      场均: #ffde26 (金黄)
+                                ================================================================================ -->
                                 <div class="rank-details-grid">
-                                    <div class="stat-badge" style="color:var(--cy-green);">胜局: ${p.wins}</div>
-                                    <div class="stat-badge" style="color:var(--cy-red);">负局: ${p.losses}</div>
-                                    <div class="stat-badge" style="color:var(--cy-pink);">最高连胜: ${p.maxWinStreak}</div>
-                                    <div class="stat-badge" style="color:#a8caba;">最高连败: ${p.maxLoseStreak}</div>
-                                    <div class="stat-badge" style="color:#f6d365;">总上场: ${fTime(totalSec)}</div>
-                                    <div class="stat-badge" style="color:#f6d365;">场均: ${fTime(avgSec)}</div>
+                                    ${(() => {
+                                        // 核心制造机：自动生成左侧对齐、带竖线、双色文本的卡牌
+                                        let buildV2Card = (lbl, val, color, pct = '') => `
+                                            <div class="stat-badge-v2">
+                                                <div class="s-label" style="color:${color};">${lbl}</div>
+                                                <div class="s-divider"></div>
+                                                <div class="s-value">${val}${pct !== '' ? ` <span style="color:${color};">(${pct}%)</span>` : ''}</div>
+                                            </div>
+                                        `;
+                                        
+                                        // 严格按照图1的顺序和颜色排列！
+                                        return `
+                                            ${buildV2Card('胜局', p.wins, '#8ee55f', rate)}
+                                            ${buildV2Card('负局', p.losses, '#fb3b3b', loseRate)}
+                                            
+                                            ${buildV2Card('清台胜利', activeWins, '#54ebf7', activePct)}
+                                            ${buildV2Card('对手失误', p.foulWins, '#d35af6', foulPct)}
+                                            
+                                            ${buildV2Card('最高连胜', p.maxWinStreak, '#fc15f8')}
+                                            ${buildV2Card('最高连败', p.maxLoseStreak, '#ffffff')}
+                                            
+                                            ${buildV2Card('最长一局', fTime(maxMatchTime), '#fd9b27')}
+                                            ${buildV2Card('最短一局', fTime(minMatchTime), '#7ff5d8')}
+                                            
+                                            ${buildV2Card('总上场', fTime(totalSec), '#ffde26')}
+                                            ${buildV2Card('场平均', fTime(avgSec), '#ffde26')}
+                                        `;
+                                    })()}
+                                    
+                                    <!-- 跨两列的全宽特殊显示：单局最高赢取 (保留历史需求，使其完美融入新环境) -->
+                                    <div class="stat-badge-full">
+                                        <div style="color:var(--cy-yellow); font-size:12px; font-weight:bold; margin-right:8px;">👑 单局最高赢取</div>
+                                        <div style="width:1px; height:12px; background:rgba(255,255,255,0.3); margin-right:10px;"></div>
+                                        <div style="color:#fff; font-family:'Oswald'; font-size:15px; font-weight:900;">${maxSingleScore} <span style="font-size:12px; font-weight:bold;">分</span></div>
+                                    </div>
                                 </div>
-                            </div>
                         </div>
                     </div>`;
             }).join('');
@@ -1702,32 +1810,25 @@ function renderH2H() {
                 let matchesInvolved = appData.matches.filter(m => m.p1 === p.id || m.p2 === p.id);
                 if(matchesInvolved.length === 0) return;
                 
-                let oppStats = {}; 
+let oppStats = {}; 
                 matchesInvolved.forEach(m => {
                     let oppId = m.p1 === p.id ? m.p2 : m.p1;
-                    
-                    // 【核心新增】：初始化积分数据记录库 pPts(我赢的分), oPts(被对手赢的分)
-                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0, dur: 0, pPts: 0, oPts: 0 };
-                    
-                    // 兼容旧数据的分数提取逻辑
-                    let earned = m.earnedPoints;
-                    if(earned === undefined) {
-                        if(m.scoreFormula) { let match = m.scoreFormula.match(/>\s*(-?\d+(\.\d+)?)\s*分/); earned = match ? parseFloat(match[1]) : 1; } 
-                        else earned = 1;
-                    }
-
+                    // 新增了 ptsEarned 用于记录从该对手身上赢取的分数
+                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0, dur: 0, ptsEarned: 0 };
                     if(m.winner === p.id) {
                         oppStats[oppId].w++;
-                        oppStats[oppId].pPts += earned; // 赢了，把分数加到我方金库
+                        oppStats[oppId].ptsEarned += (m.earnedPoints || 0); // 累加赢取的分数
                     } else {
                         oppStats[oppId].l++;
-                        oppStats[oppId].oPts += earned; // 输了，把分数加到敌方金库
                     }
                     oppStats[oppId].dur += (m.duration || 0); 
                 });
 
                 let tMatch = p.wins + p.losses; 
                 let tWinPct = tMatch===0 ? 0 : Math.round((p.wins/tMatch)*100);
+                let tLosePct = tMatch===0 ? 0 : Math.round((p.losses/tMatch)*100);
+                let pTotalSec = matchesInvolved.reduce((sum, m) => sum + (m.duration || 0), 0);
+                let pAvgSec = tMatch > 0 ? Math.floor(pTotalSec / tMatch) : 0;
                 
                 let oppHtml = '';
                 for(let oppId in oppStats) {
@@ -1737,11 +1838,24 @@ function renderH2H() {
                     let pPct = t===0?50:Math.round((st.w/t)*100); 
                     let oPct = t===0?50:Math.round((st.l/t)*100);
                     let oppAvg = t > 0 ? Math.floor(st.dur / t) : 0;
+                    // 计算赢取的分数占自己总分的百分比
+                    let ptsPct = p.score > 0 ? Math.round((st.ptsEarned / p.score) * 100) : 0;
                     
-                    // 【核心新增】：计算积分的百分比占比
-                    let totalPts = st.pPts + st.oPts;
-                    let pPtsPct = totalPts === 0 ? 50 : Math.round((st.pPts / totalPts) * 100);
-                    let oPtsPct = totalPts === 0 ? 50 : Math.round((st.oPts / totalPts) * 100);
+// ================================================================================
+                    // 【控制台 10：1V1 恩怨簿 PK面板 UI像素级调参指南】 (小白专属)
+                    // [左侧进度条]：
+                    //   1. height: 10px; -> 控制彩色进度横条的粗细。
+                    //   2. border-radius: 5px; -> 控制进度条两端的圆角。
+                    // [中间大数字 (胜负总局)]：
+                    //   1. font-size: 42px; -> 控制巨大数字“6”、“4”和“(10)”的大小。
+                    //   2. font-size: 18px; -> 控制边上“(60%)”和“(40%)”的大小。
+                    //   3. color: #00ff00; -> 左边胜利的专属毒液绿 (严格匹配需求)。
+                    //   4. color: #e6004f; -> 右边失败的专属滴血红 (严格匹配需求)。
+                    //   5. color: #ffffff; -> 中间总局的纯白色。
+                    // [右侧头像与名字]：
+                    //   1. font-size: 16px; -> 控制头像下方“名字”的大小。
+                    //   2. margin: 0 0 6px 0 !important; -> 控制头像和下方名字的距离（6px）。
+                    // ================================================================================
 
                     oppHtml += `
                         <div class="h2h-opponent-row" style="display:flex; align-items:center; padding: 15px 12px; border-bottom: 1px dashed #333;">
@@ -1751,7 +1865,21 @@ function renderH2H() {
                             =============================================== -->
                             <div style="flex: 1; display:flex; flex-direction:column; padding-right: 15px; justify-content: center;">
                                 
-                                <!-- 1. 顶部比例横条 -->
+                                <!-- 1. 顶部比例横条与赢取分数 -->
+                                <!-- ================================================================================
+                                     【控制台 21：1V1 赢取分数 调参区】(小白专属)
+                                     [控制目标]：对手进度条上方的“赢取 X分 (Y%)”
+                                     [参数修改]：
+                                     1. margin-bottom: 4px; -> 控制这行文字与下方彩色进度条的距离。
+                                     2. font-size: 22px; -> 控制“5分”这个大数字的大小。
+                                     3. color: var(--cy-yellow); -> 目前是发光黄色，可改为 #ffffff (纯白) 等。
+                                     4. text-shadow: 0 0 5px rgba(252,238,10,0.5); -> 数字的黄色发光特效。
+                                ================================================================================ -->
+                                <div style="display:flex; justify-content: flex-start; align-items: baseline; margin-bottom: 4px; font-family:'Noto Sans SC', sans-serif;">
+                                    <span style="font-size: 14px; color: #fff; font-weight: bold; margin-right: 6px;">赢取</span>
+                                    <span style="font-size: 22px; color: var(--cy-yellow); font-family: 'Oswald', sans-serif; font-weight: 900; margin-right: 6px; text-shadow: 0 0 5px rgba(252,238,10,0.5);">${st.ptsEarned}分</span>
+                                    <span style="font-size: 16px; color: var(--cy-yellow); font-family: 'Oswald', sans-serif; font-weight: bold;">(${ptsPct}%)</span>
+                                </div>
                                 <div style="width: 100%; height: 10px; background: #1a1a1a; border-radius: 5px; display: flex; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);">
                                     <div style="height:100%; width:${pPct}%; background:${p.color};"></div>
                                     <div style="height:100%; width:${100-pPct}%; background:${opp.color};"></div>
@@ -1759,55 +1887,26 @@ function renderH2H() {
                                 
                                 <!-- 2. 中间：巨型胜负数据 -->
                                 <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:'Oswald', sans-serif; font-weight:900; margin-bottom: 8px; line-height: 1;">
+                                    
+                                    <!-- 胜局百分比 与 胜局数 -->
                                     <div style="display:flex; align-items:baseline; color:#00ff00;">
                                         <span style="font-size: 18px; margin-right: 4px;">(${pPct}%)</span>
                                         <span style="font-size: 42px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${st.w}</span>
                                     </div>
+                                    
+                                    <!-- 总局数 -->
                                     <div style="color:#ffffff; font-size: 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 4px #000;">
                                         (${t})
                                     </div>
+                                    
+                                    <!-- 败局数 与 败局百分比 -->
                                     <div style="display:flex; align-items:baseline; color:#e6004f;">
                                         <span style="font-size: 42px; margin-right: 4px; text-shadow: 0 2px 5px rgba(230,0,79,0.4);">${st.l}</span>
                                         <span style="font-size: 18px;">(${oPct}%)</span>
                                     </div>
                                 </div>
                                 
-                                <!-- ================================================================================
-                                     【控制台 14：1V1 积分提款机面板 调参指南】 (小白专属)
-                                     
-                                     [1. 外围黑板框]：
-                                     background: rgba(0,0,0,0.5); -> 面板的底色，改0.5可以调整透明度。
-                                     padding: 6px 8px; -> 面板的内部留白（变胖变瘦）。
-                                     
-                                     [2. 文字大小与颜色]：
-                                     font-size: 12px; -> 控制“掠夺积分”等中文文字的大小。
-                                     color: var(--cy-yellow); -> 我方掠夺积分的颜色（默认赛博黄，你也可以改成 #00ff00 绿色）。
-                                     color: #aaa; -> 敌方掠夺我方积分的颜色（默认灰色，你也可以改成 #ff2a2a 红色）。
-                                     
-                                     [3. 迷你积分进度条]：
-                                     height: 4px; -> 控制这条积分比例线的粗细。觉得太细可以改成 6px。
-                                     margin-top: 5px; -> 进度条距离上方文字的距离。
-                                     background: var(--cy-yellow); -> 我方占有比例的进度条颜色。
-                                ================================================================================ -->
-                                <div style="background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px;">
-                                    <div style="display:flex; justify-content:space-between; font-size: 12px; font-weight: bold; font-family:'Noto Sans SC', sans-serif;">
-                                        <!-- 我方掠夺 -->
-                                        <span style="color:var(--cy-yellow);">
-                                            掠夺分: <span style="font-family:'Oswald'; font-size:15px; margin-left:2px;">${st.pPts}</span> (${pPtsPct}%)
-                                        </span>
-                                        <!-- 被敌方掠夺 -->
-                                        <span style="color:#aaa;">
-                                            被夺: <span style="font-family:'Oswald'; font-size:15px; margin-left:2px;">${st.oPts}</span> (${oPtsPct}%)
-                                        </span>
-                                    </div>
-                                    <!-- 迷你积分比例条 -->
-                                    <div style="width: 100%; height: 4px; background: #222; border-radius: 2px; display: flex; overflow: hidden; margin-top: 5px;">
-                                        <div style="height:100%; width:${pPtsPct}%; background:var(--cy-yellow); box-shadow: 0 0 5px var(--cy-yellow);"></div>
-                                        <div style="height:100%; width:${100-pPtsPct}%; background:#444;"></div>
-                                    </div>
-                                </div>
-                                
-                                <!-- 4. 底部：时间统计 -->
+                                <!-- 3. 底部：时间统计 -->
                                 <div style="display:flex; justify-content:space-between; font-size: 11px; font-weight: bold; color:#aaa; font-family:'Noto Sans SC', sans-serif;">
                                     <span>交战总时长: ${fTime(st.dur)}</span>
                                     <span style="color:var(--cy-yellow)">场均: ${fTime(oppAvg)}</span>
@@ -1818,9 +1917,11 @@ function renderH2H() {
                                  【右侧：对手头像与名字】
                             =============================================== -->
                             <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                                <!-- 头像 (利用margin抹除原本左侧强制的偏移，实现居中) -->
                                 <div class="h2h-opp-frame" style="border-color: ${opp.color}; box-shadow: 0 0 10px ${opp.color}; margin: 0 0 6px 0 !important;">
                                     <img src="${opp.avatar}">
                                 </div>
+                                <!-- 名字居中白字 -->
                                 <div style="color:#fff; font-size: 16px; font-weight: 900; letter-spacing: 1px; text-align:center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">${opp.name}</div>
                             </div>
                             
@@ -1829,16 +1930,38 @@ function renderH2H() {
                 
                 html += `
                     <div class="player-h2h-section" style="--player-color: ${p.color};">
-                        <div class="h2h-owner">
-                            <div class="h2h-owner-frame" style="box-shadow: 0 0 10px ${p.color};"><img src="${p.avatar}"></div>
-                            <div class="h2h-owner-info">
-                                <div class="h2h-owner-name">${p.name}</div>
-                                <div class="h2h-owner-stats">
-                                    <span style="color:var(--cy-cyan)">总局: ${tMatch}</span> | 
-                                    <span style="color:var(--cy-green)">胜局: ${p.wins} (${tWinPct}%)</span>
+<!-- ================================================================================
+                             【控制台 22：1V1 恩怨簿主视角大卡片 调参区】(小白专属)
+                             [结构]：完全复刻图2设计
+                             [参数修改]：
+                             1. font-size: 32px; -> 右上角黄色总分“11”的大小。
+                             2. font-size: 26px; -> 中间的巨大比分“6 (10) 4”的字体大小。
+                             3. color: var(--cy-green); -> 代表胜利的绿色，可自定义修改。
+                             4. color: var(--cy-red); -> 代表失败的红色。
+                             [特效说明]：中间数字自带 text-shadow 悬浮阴影，如果觉得太亮，可以删掉 text-shadow 属性。
+                        ================================================================================ -->
+                        <div class="h2h-owner" style="align-items: stretch; padding: 12px 15px;">
+                            <div class="h2h-owner-frame" style="box-shadow: 0 0 10px ${p.color}; margin-right: 15px; flex-shrink: 0;"><img src="${p.avatar}"></div>
+                            <div class="h2h-owner-info" style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+                                <!-- 名字与总分 -->
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <div class="h2h-owner-name" style="font-size: 22px;">${p.name}</div>
+                                    <div class="h2h-owner-score" style="font-size: 32px; color: var(--cy-yellow); line-height: 1;">${p.score} <span style="font-size:16px;">分</span></div>
+                                </div>
+                                <!-- 胜负数据条 (图2重点：绿 白 红) -->
+                                <div style="text-align: center; font-family:'Oswald', sans-serif; font-weight:900; margin: 6px 0; letter-spacing: 1px;">
+                                    <span style="color:var(--cy-green); font-size:14px; margin-right:4px;">(${tWinPct}%)</span>
+                                    <span style="color:var(--cy-green); font-size:24px; margin-right:6px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${p.wins}</span>
+                                    <span style="color:#ffffff; font-size:24px; margin-right:6px; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">(${tMatch})</span>
+                                    <span style="color:var(--cy-red); font-size:24px; margin-right:4px; text-shadow: 0 2px 5px rgba(255,42,42,0.4);">${p.losses}</span>
+                                    <span style="color:var(--cy-red); font-size:14px;">(${tLosePct}%)</span>
+                                </div>
+                                <!-- 时间统计 -->
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #aaa; font-weight: bold; font-family:'Noto Sans SC', sans-serif;">
+                                    <span>交战总时长: ${fTime(pTotalSec)}</span>
+                                    <span style="color:var(--cy-yellow);">场均: ${fTime(pAvgSec)}</span>
                                 </div>
                             </div>
-                            <div class="h2h-owner-score">${p.score} </div>
                         </div>
                         ${oppHtml}
                     </div>`;
@@ -2055,14 +2178,94 @@ document.getElementById('rule-streak-inc').value = appData.rules.streakBonusInc 
                 </div>`).join('');
         }
 
-        function saveRules() { 
+// ==============================================================================
+        // 【时光机重算引擎】：当规则发生改变时，自动从第1局开始重新推演计算所有分数！
+        // ==============================================================================
+        function recalculateAllScores() {
+            // 1. 重置所有玩家的积分状态，剥离曾经获得的分数，回到初始底分
+            appData.players.forEach(p => {
+                if (p.score === undefined) p.score = 0;
+                if (p.totalScoreEarned === undefined) p.totalScoreEarned = 0;
+                p.score -= p.totalScoreEarned; 
+                p.totalScoreEarned = 0; 
+                p.tempStreak = 0; // 用于模拟历史推演的临时连胜指示器
+            });
+
+            // 2. 像放电影一样，从第一局开始，根据新规则重新发奖金！
+            appData.matches.forEach(m => {
+                let p1 = appData.players.find(x => x.id === m.p1);
+                let p2 = appData.players.find(x => x.id === m.p2);
+                if(!p1 || !p2) return;
+                
+                let winner = (m.winner === p1.id) ? p1 : p2;
+                let loser = (m.winner === p1.id) ? p2 : p1;
+
+                let earnedPoints = 0;
+                let formulaBase = '';
+                let formulaBonus = '';
+
+                // A. 基础等级分
+                if(winner.level === 'high' && loser.level === 'high') { earnedPoints = Number(appData.rules.hh); formulaBase = `(高手赢高手) ${earnedPoints}`; }
+                else if(winner.level === 'low' && loser.level === 'low') { earnedPoints = Number(appData.rules.ll); formulaBase = `(低手赢低手) ${earnedPoints}`; }
+                else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = Number(appData.rules.hl); formulaBase = `(高手赢低手) ${earnedPoints}`; }
+                else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = Number(appData.rules.lh); formulaBase = `(低手爆冷高手) ${earnedPoints}`; }
+
+                // B. 连胜奖励系统 (根据推演的临时连胜计算)
+                let threshold = Number(appData.rules.streakThreshold);
+                if(winner.tempStreak >= threshold) {
+                    let overStreak = winner.tempStreak - threshold;
+                    let incX = Number(appData.rules.streakBonusInc) || 0;
+                    let redBonus = Number(appData.rules.reduced);
+                    let streakInc = overStreak * incX;
+                    earnedPoints += redBonus + streakInc;
+                    formulaBonus += ` + (连胜基础奖励) ${redBonus}` + (streakInc > 0 ? ` + (连胜递增奖励) ${streakInc}` : '');
+                }
+
+                // C. 终结赏金系统
+                if(loser.tempStreak >= threshold) {
+                    let overStreak = loser.tempStreak - threshold;
+                    let incY = Number(appData.rules.bountyInc) || 0;
+                    let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY);
+                    earnedPoints += currentDynamicBounty;
+                    formulaBonus += ` + (终结赏金) ${currentDynamicBounty}`;
+                }
+
+                // D. 附加分判定 (清台 / 剃光头)
+                let isClean = (m.type === 'clean' || m.type === 'clean_shutout');
+                let isShutout = (m.type === 'shutout' || m.type === 'clean_shutout');
+                if(isClean) { let cb = Number(appData.rules.cleanBonus); earnedPoints += cb; formulaBonus += ` + (一杆清台) ${cb}`; }
+                if(isShutout) { let sb = Number(appData.rules.shutoutBonus); earnedPoints += sb; formulaBonus += ` + (剃光头) ${sb}`; }
+
+                // E. 覆写该局历史真实的得分与公式！
+                m.earnedPoints = earnedPoints;
+                m.scoreFormula = `${formulaBase}${formulaBonus} = <span style="color:var(--cy-yellow); font-size:15px; font-family:'Oswald', sans-serif;">${earnedPoints} 分</span>`;
+
+                // F. 推进模拟进度
+                winner.score += earnedPoints;
+                winner.totalScoreEarned += earnedPoints;
+                winner.tempStreak++;
+                loser.tempStreak = 0;
+            });
+
+            // 3. 打扫战场，删除临时推演变量
+            appData.players.forEach(p => delete p.tempStreak);
+        }
+
+function saveRules() { 
             appData.rules.hh = parseFloat(document.getElementById('rule-hh').value); appData.rules.ll = parseFloat(document.getElementById('rule-ll').value);
             appData.rules.hl = parseFloat(document.getElementById('rule-hl').value); appData.rules.lh = parseFloat(document.getElementById('rule-lh').value);
             appData.rules.streakThreshold = parseInt(document.getElementById('rule-streak').value); appData.rules.bounty = parseFloat(document.getElementById('rule-bounty').value); appData.rules.reduced = parseFloat(document.getElementById('rule-reduced').value);
-appData.rules.streakBonusInc = parseFloat(document.getElementById('rule-streak-inc').value);
+            appData.rules.streakBonusInc = parseFloat(document.getElementById('rule-streak-inc').value);
             appData.rules.bountyInc = parseFloat(document.getElementById('rule-bounty-inc').value);
             appData.rules.cleanBonus = parseFloat(document.getElementById('rule-clean').value); appData.rules.shutoutBonus = parseFloat(document.getElementById('rule-shutout').value);
-            saveStateToHistory(); saveLocalAndSync(); alert("规则同步完成。");
+            
+            // 🚀 核心：修改规则后，立马调用我们刚写的引擎，重算所有历史战绩！
+            recalculateAllScores(); 
+            
+            saveStateToHistory(); 
+            saveLocalAndSync(); 
+            updateAllUI(); // 🚀 核心：重算完立刻刷新画面，让新分数马上显示出来！
+            alert("✅ 规则同步完成！系统已依据新规则，重新推演计算了所有历史积分！");
         }
         function addPlayer(name="新选手", level="low", avatar="") {
             let id='p_'+Date.now()+Math.floor(Math.random()*1000); if(!avatar) avatar=`https://api.dicebear.com/7.x/notionists/svg?seed=${id}`;
