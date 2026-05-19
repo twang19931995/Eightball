@@ -814,6 +814,23 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             <div id="player-edit-list" style="margin-top:10px;"></div>
             <button class="btn-prime" onclick="addPlayerForm()" style="margin-top: 10px;">+ 录入新选手</button>
         </div>
+
+<!-- ================================================================================
+             新增：同日轮次区间切割 (高级功能)
+        ================================================================================ -->
+        <div class="premium-panel" style="border-top: 2px solid #b026ff; border-bottom: 2px solid #ff00ea;">
+            <label style="color:var(--cy-pink); font-weight:bold; font-size:14px;">✂️ 同日轮次区间切割 (高级)</label>
+            <p style="font-size:10px; color:#888; margin-top:5px;">如遇同一天分早晚场，在此输入下半场的起始局数(X)。系统会自动将当天的对局切分为 01、02 两个独立计分区间。</p>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:10px; align-items:center;">
+                <input type="number" id="split-match-num" placeholder="输入新轮次起始局数(X)" style="width:60%; padding:8px; margin:0; text-align:center;">
+                <button class="btn-prime" style="width:35%; padding:8px; background:linear-gradient(90deg, #b026ff, #ff00ea);" onclick="addCustomSplit()">✂️ 切割</button>
+            </div>
+            
+            <!-- 这里用来显示已经切好的点，方便撤销 -->
+            <div id="split-list-area" style="margin-top: 10px; display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+
 <!-- ================================================================================
              新增：历史对局时间修改器 面板
         ================================================================================ -->
@@ -941,15 +958,47 @@ let appData = {
         // ==============================================================================
         let currentViewDate = 'ALL';
 
-        function getFilteredData() {
+function getFilteredData() {
             if(currentViewDate === 'ALL') return { matches: appData.matches, players: appData.players };
 
-            // 1. 抽取出那一天的所有比赛
-            let fMatches = appData.matches.filter(m => {
+            let customSplits = appData.customSplits || [];
+            let rawGroups = {};
+            
+            // 先按日期粗略分组
+            appData.matches.forEach((m, idx) => {
                 let d = new Date(m.ts);
-                let dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                return dk === currentViewDate;
+                let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                if(!rawGroups[dateKey]) rawGroups[dateKey] = [];
+                rawGroups[dateKey].push({ match: m, absNum: idx + 1 });
             });
+
+            let fMatches = [];
+            // 根据你的切割点(X值)，把每一天的数据再次切成 01, 02 这样的小块
+            for (let dk in rawGroups) {
+                let matchesInDay = rawGroups[dk];
+                let subGroups = [];
+                let currentSub = [];
+                matchesInDay.forEach(item => {
+                    // 如果遇到了你的切割点局数，马上挥下剪刀切断！
+                    if (customSplits.includes(item.absNum) && currentSub.length > 0) {
+                        subGroups.push(currentSub);
+                        currentSub = [];
+                    }
+                    currentSub.push(item);
+                });
+                if (currentSub.length > 0) subGroups.push(currentSub);
+                
+                if (subGroups.length === 1) {
+                    if (currentViewDate === dk) fMatches = subGroups[0].map(x => x.match);
+                } else {
+                    subGroups.forEach((sg, idx) => {
+                        let subKey = `${dk}#${idx+1}`; // 内部暗号：2026-05-18#1, 2026-05-18#2
+                        if (currentViewDate === subKey) fMatches = sg.map(x => x.match);
+                    });
+                }
+            }
+
+            // 2. 复制所有玩家名单... (下方原来的代码保持不变！)
 
             // 2. 复制所有玩家名单，并把当天的所有战绩统统归零！（也就是这轮的起点）
             let fPlayers = JSON.parse(JSON.stringify(appData.players));
@@ -996,36 +1045,66 @@ let appData = {
         }
 
         // 弹窗生成列表的逻辑
-        function openRoundModal() {
+function openRoundModal() {
             let tbody = document.getElementById('round-tbody');
-            let grouped = {};
-            let totalDur = appData.matches.reduce((sum, m) => sum + (m.duration || 0), 0);
             let tCount = appData.matches.length;
             let fHms = (sec) => `${Math.floor(sec/3600)}:${Math.floor((sec%3600)/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+            let totalDur = appData.matches.reduce((sum, m) => sum + (m.duration || 0), 0);
             
-            // 永远置顶显示“总区间”
             let html = `<tr onclick="applyViewFilter('ALL')" style="cursor:pointer; background: ${currentViewDate === 'ALL' ? 'rgba(0,243,255,0.2)' : 'rgba(255,255,255,0.05)'};">
                 <td style="color:var(--cy-yellow); font-weight:bold;">全部总区间</td>
                 <td>1~${tCount}</td><td>${fHms(totalDur)}</td><td>${fHms(tCount>0?Math.floor(totalDur/tCount):0)}</td>
             </tr>`;
 
-            // 按日期归纳每一轮
+            let customSplits = appData.customSplits || [];
+            let rawGroups = {};
             appData.matches.forEach((m, idx) => {
                 let d = new Date(m.ts);
-                let dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                let displayDate = `${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; 
-                
-                if(!grouped[dk]) grouped[dk] = { display: displayDate, indices: [], totalDur: 0 };
-                grouped[dk].indices.push(idx + 1);
-                grouped[dk].totalDur += (m.duration || 0);
+                let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                if(!rawGroups[dateKey]) rawGroups[dateKey] = [];
+                rawGroups[dateKey].push({ match: m, absNum: idx + 1 });
             });
 
-            Object.keys(grouped).reverse().forEach(dk => {
-                let data = grouped[dk];
+            let finalGroups = {};
+            for (let dk in rawGroups) {
+                let matchesInDay = rawGroups[dk];
+                let subGroups = []; let currentSub = [];
+                matchesInDay.forEach(item => {
+                    if (customSplits.includes(item.absNum) && currentSub.length > 0) {
+                        subGroups.push(currentSub); currentSub = [];
+                    }
+                    currentSub.push(item);
+                });
+                if (currentSub.length > 0) subGroups.push(currentSub);
+                
+                let displayDateBase = dk.replace(/-/g, '').substring(2); 
+                if (subGroups.length === 1) {
+                    finalGroups[dk] = { 
+                        display: displayDateBase, 
+                        indices: subGroups[0].map(x=>x.absNum), 
+                        totalDur: subGroups[0].reduce((s,x)=>s+(x.match.duration||0), 0)
+                    };
+                } else {
+                    subGroups.forEach((sg, idx) => {
+                        let subKey = `${dk}#${idx+1}`;
+                        // 这里完美生成：260518-01, 260518-02
+                        let subDisplay = `${displayDateBase}-${String(idx+1).padStart(2,'0')}`;
+                        finalGroups[subKey] = {
+                            display: subDisplay, indices: sg.map(x=>x.absNum), totalDur: sg.reduce((s,x)=>s+(x.match.duration||0), 0)
+                        };
+                    });
+                }
+            }
+
+            // 按照最新的比赛局数，从上到下排列
+            let sortedKeys = Object.keys(finalGroups).sort((a,b) => Math.min(...finalGroups[b].indices) - Math.min(...finalGroups[a].indices));
+
+            sortedKeys.forEach(key => {
+                let data = finalGroups[key];
                 let count = data.indices.length;
-                let range = `${Math.min(...data.indices)}~${Math.max(...data.indices)}`;
-                let isSel = currentViewDate === dk;
-                html += `<tr onclick="applyViewFilter('${dk}')" style="cursor:pointer; background: ${isSel ? 'rgba(0,243,255,0.2)' : 'transparent'};">
+                let range = count > 1 ? `${Math.min(...data.indices)}~${Math.max(...data.indices)}` : `${data.indices[0]}`;
+                let isSel = currentViewDate === key;
+                html += `<tr onclick="applyViewFilter('${key}')" style="cursor:pointer; background: ${isSel ? 'rgba(0,243,255,0.2)' : 'transparent'};">
                     <td style="color:${isSel ? 'var(--cy-cyan)' : '#fff'}; font-weight:bold;">${data.display}</td>
                     <td>${range}</td><td>${fHms(data.totalDur)}</td><td>${fHms(count>0?Math.floor(data.totalDur/count):0)}</td>
                 </tr>`;
@@ -1036,7 +1115,7 @@ let appData = {
         }
 
         // 切换视图的开关
-        function applyViewFilter(dateKey) {
+function applyViewFilter(dateKey) {
             currentViewDate = dateKey;
             document.getElementById('roundModal').style.display = 'none';
             let bar = document.getElementById('view-filter-bar');
@@ -1046,8 +1125,15 @@ let appData = {
                 text.innerHTML = '📅 当前数据视图：🔥 全部总区间';
             } else {
                 bar.style.background = 'linear-gradient(90deg, #ff00ea, #00f3ff)';
-                let displayDate = dateKey.replace(/-/g, '').substring(2); 
-                text.innerHTML = `📅 当前视图：🛑 独立轮次 [${displayDate}]`;
+                let displayStr = dateKey;
+                // 解析带有切割点特征的内部暗号，渲染给用户看
+                if(dateKey.includes('#')) {
+                    let parts = dateKey.split('#');
+                    displayStr = `${parts[0].replace(/-/g, '').substring(2)}-${String(parts[1]).padStart(2,'0')}`;
+                } else {
+                    displayStr = dateKey.replace(/-/g, '').substring(2); 
+                }
+                text.innerHTML = `📅 当前视图：🛑 独立轮次 [${displayStr}]`;
             }
             updateAllUI(); // 触发页面全面刷新！
         }
@@ -1632,7 +1718,6 @@ container.innerHTML = svgHtml + avatarsHtml;
             };
 
             container.innerHTML = `<div class="battle-arena" style="height:auto; min-height:480px;">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
-
 // --- 新增：自动读取并渲染规则讲解区 ---
             document.getElementById('rules-panel-container').innerHTML = `
                 <div style="font-size:13px; font-weight:900; color:var(--cy-cyan); margin-bottom:8px; text-shadow:0 0 5px rgba(0,243,255,0.4);">📜 战局积分规则</div>
@@ -1656,7 +1741,6 @@ container.innerHTML = svgHtml + avatarsHtml;
                     </div>
                 </div>
             `;
-
             document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
                 let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
                 return `<div class="q-item ${isResting ? 'is-resting' : ''}">
@@ -2218,6 +2302,50 @@ function exportExcel() {
             };
             reader.readAsArrayBuffer(file);
         }
+
+// ==============================================================================
+        // 新增功能：轮次区间切割器 专属逻辑
+        // ==============================================================================
+        function addCustomSplit() {
+            let val = parseInt(document.getElementById('split-match-num').value);
+            if(isNaN(val) || val <= 1) return alert("请输入大于 1 的有效局数！");
+            if(val > appData.matches.length) return alert("该局数尚未发生，无法作为切分点！");
+            
+            if(!appData.customSplits) appData.customSplits = [];
+            if(appData.customSplits.includes(val)) return alert("这局已经是切割点了！");
+            
+            appData.customSplits.push(val);
+            appData.customSplits.sort((a,b) => a - b); // 确保切割点从小到大排好
+            
+            document.getElementById('split-match-num').value = ''; // 清空输入框
+            saveStateToHistory(); saveLocalAndSync();
+            renderSettingsSplits(); updateAllUI();
+            alert(`✅ 切割成功！从第 ${val} 局开始已划分为新的轮次。\n去顶部的【当前数据视图】点击看看吧！`);
+        }
+        
+        function removeCustomSplit(val) {
+            if(!appData.customSplits) return;
+            appData.customSplits = appData.customSplits.filter(x => x !== val);
+            saveStateToHistory(); saveLocalAndSync();
+            renderSettingsSplits(); updateAllUI();
+        }
+
+        function renderSettingsSplits() {
+            let container = document.getElementById('split-list-area');
+            if(!container) return;
+            if(!appData.customSplits || appData.customSplits.length === 0) {
+                container.innerHTML = '<div style="font-size:11px; color:#555; text-align:center;">当前无自定义切割点</div>';
+                return;
+            }
+            container.innerHTML = appData.customSplits.map(val => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:6px 10px; border-radius:4px; border-left:3px solid #ff00ea;">
+                    <span style="color:#fff; font-size:12px; font-weight:bold;">第 <span style="color:var(--cy-yellow); font-size:16px;">${val}</span> 局为新轮次起点</span>
+                    <button class="btn-prime btn-alert" style="width:auto; padding:4px 10px; font-size:11px;" onclick="removeCustomSplit(${val})">取消</button>
+                </div>
+            `).join('');
+        }
+
+
 // ==============================================================================
         // 新增功能：历史对局时间修改器 专属逻辑
         // ==============================================================================
@@ -2275,6 +2403,7 @@ function exportExcel() {
 
         function renderSettings() {
 updateMatchEditDropdown(); // 刷新对局时间修改器的下拉菜单
+renderSettingsSplits();    // 刷新切割点列表
             document.getElementById('rule-hh').value = appData.rules.hh; document.getElementById('rule-ll').value = appData.rules.ll;
             document.getElementById('rule-hl').value = appData.rules.hl; document.getElementById('rule-lh').value = appData.rules.lh;
             document.getElementById('rule-streak').value = appData.rules.streakThreshold; document.getElementById('rule-bounty').value = appData.rules.bounty; document.getElementById('rule-reduced').value = appData.rules.reduced;
