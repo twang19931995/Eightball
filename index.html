@@ -14,11 +14,8 @@
             --cy-red: #ff2a2a; --cy-green: #00ff66; --cy-dark: #090a0f;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans SC', sans-serif; user-select: none; }
-body { background-color: var(--cy-dark); background-image: radial-gradient(circle at 50% 0%, #171d33 0%, var(--cy-dark) 60%); color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
-        /* ==================================================
-           【全局静态高光机制】 (已移除呼吸灯动画)
-           供所有需要发光的玩家卡片使用
-        ================================================== */
+        body { background-color: var(--cy-dark); background-image: radial-gradient(circle at 50% 0%, #171d33 0%, var(--cy-dark) 60%); color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        
         .static-neon-glow {
             border: 2px solid var(--glow-color);
             box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px var(--glow-color);
@@ -39,102 +36,31 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         button.btn-prime:active { transform: scale(0.98); }
         input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #111; color: var(--cy-cyan); margin-top: 5px; outline: none; font-weight: bold; }
 
-        /* ==================================================
-           【页面一：核心赛场 - 对战玩家大卡片头像裁剪区】
-           请在 F12 的 Elements 结构树中，层层点开直到选中 <img> 标签！
-           或者直接修改下方的 object-position 数值，保存刷新即可生效。
-        ================================================== */
         .battle-arena { display: flex; height: 450px; gap: 8px; margin-bottom: 20px; align-items: stretch; }
         .combatant-outer { flex: 1; display: flex; flex-direction: column; background:#000; border-radius: 6px; overflow:hidden;}
         .combatant { position: relative; height: 100%; display: flex; flex-direction: column; }
         .c-img-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-/* 
-        ================================================================================
-        【控制台 5：全页面头像移动与缩放的终极指南】
-        [需求]：在绝对不改变外面相框大小的前提下，像“照相机镜头”一样调整里面的照片。
-
-        [核心必杀技 3 连招]：
-        第一招：object-fit: cover; 
-           -> 必须有！代表“保持比例填满相框，多余的部分自动剪裁隐藏”。
-        object-fit: cover; 
-        transform: scale(1.2);
-        第二招：object-position: 50% 10%; 
-           -> 【控制镜头移动（平移）】
-           -> 第一个参数(50%)控制左右：0%靠最左，50%居中，100%靠最右。
-           -> 第二个参数(10%)控制上下：0%是头皮，50%是肚子，100%是脚底。
-           -> 💡[秘籍]：如果发现人脸偏下了，就把第二个数字改小（比如改到 0% 或 10%）！
-
-        第三招：transform: scale(1.2); 
-           -> 【控制镜头拉近/拉远（缩放）】
-           -> 1.0 是原始大小。
-           -> 如果嫌人太小：改成 scale(1.3) 就是放大30%，人瞬间变大！
-           -> 如果嫌人太大：改成 scale(0.9) 就是缩小10%！
-           -> 💡[秘籍]：放大后记得配合 object-position 重新把脸对准中心。
-        ================================================================================
-        */
-        
-        /* 🔥 赛场主头像实际套用处（你可以依葫芦画瓢修改其他的） 🔥 */
         #play-area .c-img-wrapper img { 
             width: 100%; 
             height: 100%; 
-            object-fit: cover;             /* 连招一：保持填满 */
-            object-position: 50% 15%;      /* 连招二：左右居中(50%)，上下偏头顶(15%) */
-            transform: scale(1.1);         /* 连招三：整体放大 10%，让人脸更突出！ */
-            transform-origin: center center; /* 设定放大的中心点为画面中心 */
+            object-fit: cover;             
+            object-position: 50% 15%;      
+            transform: scale(1.1);         
+            transform-origin: center center; 
             filter: contrast(1.1); 
         }
 
         .c-info-layer { position: relative; z-index: 2; margin-top: auto; padding: 15px 10px; background: linear-gradient(to top, rgba(0,0,0,1) 10%, rgba(0,0,0,0.7) 60%, transparent); display: flex; flex-direction: column; align-items: center; }
         .c-name { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px #000; margin-bottom: 2px; }
-/* 
-        ================================================================================
-        【控制台 8：终结红名奖金悬浮牌 - 样式终极调参面板】 (小白专属)
-        [控制目标]：核心赛场，红名玩家名字上方的“💰 终结奖金：XX 分”小牌子
-        
-        [如何调整大小和位置]：
-          1. margin-bottom: 4px;   -> 决定这个牌子和下方玩家名字的距离。数值越大，离名字越远。
-          2. font-size: 13px;      -> 牌子里面文字的大小。嫌小可以改成 15px 或更大。
-          3. padding: 4px 10px;    -> 牌子内部的上下左右留白(胖瘦)。4px是上下，10px是左右。
-          4. border-radius: 12px;  -> 圆角程度。改成 0px 就是方方正正的砖块，改成 20px 就是圆溜溜的胶囊。
 
-        [特效备用库 (你可以把下面的代码复制，粘贴替换到 background 或 box-shadow 里试效果)]：
-          * 赛博朋克蓝黄渐变底色： background: linear-gradient(90deg, #00f3ff, #fcee0a); color: #000;
-          * 滴血恶魔红外发光特效： box-shadow: 0 0 10px #ff2a2a, inset 0 0 5px #ff2a2a; border: 1px solid #ff2a2a;
-          * 土豪金高贵文字发光： text-shadow: 0 0 5px #fcee0a, 0 0 10px #ff7b00;
-        ================================================================================
-*/
-        .bounty-tag {
-            margin-bottom: 1px;
-            font-size: 16px;
-            font-weight: 900;
-            padding: 4px 5px;
-            border-radius: 12px;
-            background: rgba(0, 0, 0, 0.7); /* 默认半透明黑底 */
-            border: 1px solid var(--cy-yellow); /* 默认黄色边框 */
-            color: var(--cy-yellow); /* 默认黄字 */
-            box-shadow: 0 2px 10px rgba(252,238,10,0.4); /* 默认淡淡黄色发光 */
-            backdrop-filter: blur(4px); /* 背景毛玻璃模糊效果 */
-            animation: tag-breathe 1s infinite alternate; /* 绑定下方的心跳呼吸动画 */
-        }
-
-        /* 奖金牌的专属心跳发光动画 */
-        @keyframes tag-breathe {
-            0% { transform: scale(1); box-shadow: 0 0 5px rgba(252,238,10,0.4); }
-            100% { transform: scale(1.05); box-shadow: 0 0 15px rgba(252,238,10,0.8), 0 0 20px rgba(255,42,42,0.5); }
-        }
-        .c-score { font-size: 36px; font-weight: bold; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5); line-height: 1; margin-bottom: 10px; font-family: 'Oswald'; }
         .streak-label { position: absolute; top: 0; left: 0; width: 100%; background: var(--glow-color); color: #000; text-align: center; font-size: 14px; font-weight: 900; padding: 6px 0; z-index: 3; box-shadow: 0 2px 10px var(--glow-color); }
         .vs-center { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40px; z-index: 10; margin: 0 -15px; }
         .vs-text { font-size: 25px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 5px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid var(--cy-pink); text-shadow: 0 0 10px var(--cy-pink);}
 
-        /* ==================================================
-           【页面一：赛场 - 候补席头像裁剪区】
-        ================================================== */
         .queue-scroll { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; }
         .q-item { position: relative; width: 75px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
         
-        /* 🔥 候补席小头像修改处 🔥 */
         #queue-list .q-avatar { 
             width: 100px; 
             height: 60px; 
@@ -149,115 +75,12 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         .q-name { font-size: 12px; font-weight: bold; margin-top: 5px; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .rest-btn { margin-top: 5px; font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #222; color: #aaa; cursor: pointer; border:1px solid #444;}
         .q-item.is-resting .rest-btn { background: #442222; color: #ff5555; border-color:#ff5555;}
-        .timer-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--cy-cyan); margin-bottom: 15px; box-shadow: 0 0 15px rgba(0,243,255,0.2); }
+        .timer-header { display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 6px; border: 1px solid var(--cy-cyan); margin-bottom: 15px; box-shadow: 0 0 15px rgba(0,243,255,0.2); }
 
-        /* ==================================================
-           【页面二：风云榜 - 玩家头像专属颜色描边区】
-        ================================================== */
-        /* ================================================================================
-           【控制台 26：风云榜卡片间距 调参区】(小白专属)
-           [参数修改]：
-           1. margin-bottom: 25px; -> 这里的 25px 控制每个玩家卡片之间的上下空隙！
-              如果觉得不够宽，可以改成 35px；如果觉得太宽，改成 20px。
-           2. box-shadow: 0 4px 15px rgba(0,0,0,0.5); -> 顺手给你加了个外层卡片的高级投影，更有层次感！
-        ================================================================================ */
-        .rank-card-outer { margin-bottom: 25px; border-radius: 6px; background: rgba(15,20,30,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        /* 移除外层卡片的呼吸动画，仅保留发光 */
-        .rank-inner { display: flex; min-height: 140px; height: auto; position: relative;} /* 把固定高度改成 auto，让它能自动撑开装下更多数据 */
-        .rank-left { width: 100px; position: relative; flex-shrink: 0;}
-        
-        /* 🔥 风云榜左侧玩家头像修改处 🔥 */
-        #stats-list .rank-left img { 
-            width: 100%; 
-            height: 50%; 
-            object-position: center 0%; 
-            border-top-left-radius: 4px; 
-            border-bottom-left-radius: 4px;
-            /* 描边颜色由内联样式 style="border-color:..." 动态控制，这里不要写死 border-color */
-            border-right: none; /* 让右边融入卡片 */
-        }
-        
-        /* 排名数字角标 */
-        .rank-num { position: absolute; top: 0; left: 0; background: rgba(0,0,0,0.8); font-size: 20px; font-weight: 900; padding: 2px 2px; border-bottom-right-radius: 8px; font-family: 'Oswald'; }
-        
-        .rank-right { flex: 1; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }
-        .rank-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .rank-name-box { font-size: 30px; font-weight: 900; color: #fff; }
-        .rank-score-box { font-size: 40px; color: var(--cy-yellow); font-family: 'Oswald'; line-height: 1;}
-/* 
-        ================================================================================
-        【控制台 4：风云榜 - 战绩详细数据网格控制】
-        [控制目标]：风云榜右侧的胜负局、时间、连胜连败等数据小方块
-        [参数说明]：
-          1. grid-template-columns: 1fr 1fr; -> 控制每行显示几个方块。1fr 1fr 代表一行两列（各占50%）。如果改成 1fr 1fr 1fr 就是一行三列！
-          2. gap: 4px; -> 方块与方块之间的缝隙距离，数字越大越宽松。
-          3. font-size: 11px; -> 里面文字的大小。
-          4. stat-badge 中的 background: rgba(255,255,255,0.08); -> 小方块的底色透明度。
-        ================================================================================
-        */
-/* ================================================================================
-           【控制台 24：风云榜 1比1复刻图1卡牌 UI调参区】(小白专属)
-           [排版控制]：
-           1. grid-template-columns: 1fr 1fr; -> 控制两列等宽。
-           2. gap: 6px 8px; -> 卡片之间的间距。6px是上下距离，8px是左右距离。
-           
-           [内部元素控制 (.stat-badge-v2)]：
-           1. background: #1a1c24; -> 精准提取的图1深空灰蓝底色。
-           2. border-radius: 6px; -> 图1的圆角大小。
-           3. padding: 6px 8px; -> 胶囊内部的上下左右空间。
-           
-           [文字与竖线控制]：
-           1. .s-label 里的 width: 54px; -> 极度关键！固定左边文字的宽度，确保所有竖线在同一条垂直线上完美对齐！
-           2. .s-label 里的 font-size: 12px; -> 左边彩色文字的大小。
-           3. .s-divider 里的 width: 1px; height: 14px; -> 分割竖线的粗细和高矮。
-           4. .s-value 里的 color: #fff; -> 右侧数据纯白色。
-        ================================================================================ */
-        .rank-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; margin-top: 10px; }
-        .stat-badge-v2 { display: flex; align-items: center; background: #1a1c24; border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; padding: 2px 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .stat-badge-v2 .s-label { width: 54px; font-size: 12px; font-weight: bold; text-align: left; flex-shrink: 0; letter-spacing: 0.5px; }
-        .stat-badge-v2 .s-divider { width: 1px; height: 14px; background: rgba(255,255,255,0.25); margin: 0 8px 0 2px; flex-shrink: 0; }
-        .stat-badge-v2 .s-value { font-size: 13px; font-weight: bold; color: #fff; text-align: left; flex: 1; white-space: nowrap; font-family: 'Noto Sans SC', sans-serif; letter-spacing: 0.5px;}
-        
-        /* 底部“单局最高分”独立宽格样式 */
-        .stat-badge-full { grid-column: span 2; display: flex; align-items: center; justify-content: center; background: rgba(252,238,10,0.08); border: 1px solid rgba(252,238,10,0.3); border-radius: 6px; padding: 6px 8px; margin-top: 2px;}
-        .date-footer-text { text-align: center; color: #888; font-size: 15px; margin-top: 20px; font-weight: bold;}
-
-        /* ==================================================
-           【页面三：荣誉殿堂 - 成就头像裁剪区】
-        ================================================== */
-        .achieve-list-container { display: flex; flex-direction: column; gap: 12px; }
-        .ach-card-outer { border-radius: 8px; background: rgba(10, 15, 25, 0.95); }
-        .ach-card { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 10px; }
-        .ach-left-icon { font-size: 40px; width: 50px; text-align: center; filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); flex-shrink: 0;}
-        .ach-mid-info { flex: 1; padding: 0 10px; display: flex; flex-direction: column; justify-content: center; }
-        .ach-title { font-size: 15px; font-weight: 900; margin-bottom: 2px; color: var(--cy-cyan); text-shadow: 0 0 5px rgba(0,243,255,0.5);}
-        .ach-player { font-size: 16px; font-weight: bold; color: #fff; }
-        .ach-val { font-size: 14px; color: var(--cy-yellow); font-family: 'Oswald'; margin-left: 10px;}
-        .ach-desc { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.3; }
-        .ach-right-avatar { width: 65px; height: 65px; flex-shrink: 0; border-radius: 6px; overflow: hidden; border: 1px solid #555; }
-        
-        /* 🔥 荣誉殿堂右侧头像修改处 🔥 */
-        #achieve-list .ach-right-avatar img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            object-position: top; 
-        }
-        
-        .achieve-disabled { border: 1px solid #333 !important; box-shadow: none !important; background: rgba(10,10,15,0.6); }
-        .achieve-disabled .ach-title, .achieve-disabled .ach-player, .achieve-disabled .ach-val, .achieve-disabled .ach-desc { color: #555; text-shadow:none;}
-        .achieve-disabled .ach-left-icon { filter: grayscale(100%) opacity(0.2); }
-        .achieve-disabled .ach-right-avatar img { display: none; }
-
-        /* ==================================================
-           【页面四：宿命恩怨簿 - 头像裁剪区】
-        ================================================== */
         .player-h2h-section { background: rgba(0,0,0,0.6); border-radius: 8px; margin-bottom: 20px; overflow: hidden; border: 2px solid var(--player-color); box-shadow: 0 0 15px black; }
         .h2h-owner { display: flex; align-items: center; background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent); padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         
-        /* 🔥 恩怨簿主视角大头像修改处 🔥 */
         #h2h-list .h2h-owner img { 
-
             border-radius: 8px; 
             margin-right: 15px; 
             border: 2px solid black; 
@@ -268,21 +91,10 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
 
         .h2h-owner-info { flex: 1; }
         .h2h-owner-name { font-size: 25px; font-weight: 900; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
-        .h2h-owner-stats { font-size: 15px; color: #aaa; margin-top: 4px; font-weight: bold;}
-        .h2h-owner-score { font-size: 35px; color: var(--cy-yellow); font-family: 'Oswald'; font-weight: bold;}
-        
         .h2h-opponent-row { display: flex; align-items: center; padding: 12px; border-bottom: 1px dashed #333; }
         .h2h-opponent-row:last-child { border-bottom: none; }
-        .h2h-bar-container { flex: 1; }
-        .h2h-bar-names { display: flex; justify-content: flex-end; font-size: 18px; color: #fff; font-weight: 900; margin-bottom: 6px; letter-spacing: 1px;}
-        .h2h-bar-wrap { width: 100%; height: 10px; background: #1a1a1a; border-radius: 5px; display: flex; overflow: hidden; }
-        .h2h-bar-left { height: 100%; background: var(--player-color); }
-        .h2h-bar-right { height: 100%; background: #444; }
-        .h2h-vs-stats { font-size: 12px; font-weight: bold; font-family: 'Oswald'; display: flex; justify-content: space-between; margin-top: 4px; color: #ccc;}
         
-        /* 🔥 恩怨簿右侧对手小头像修改处 🔥 */
         #h2h-list .h2h-opp-img { 
-
             border-radius: 6px; 
             border: 3px solid #555; 
             object-fit: cover; 
@@ -290,19 +102,12 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             margin-left: 6px;
         }
 
-        /* ==================================================
-           【页面五：详情 - 对战记录与表格】
-        ================================================== */
         .sub-tabs { display: flex; margin-bottom: 15px; background: #111; border-radius: 6px; overflow: hidden;}
         .sub-tab-btn { flex: 1; padding: 10px; text-align: center; font-weight: bold; color: #666; cursor: pointer; transition: 0.3s;}
         .sub-tab-btn.active { background: var(--cy-cyan); color: #000; }
         
         .match-log-item { background: rgba(255,255,255,0.05); border-left: 3px solid var(--cy-pink); padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; }
-        .log-num { font-family: 'Oswald'; font-size: 20px; color: var(--cy-yellow); width: 45px; }
-        .log-vs { flex: 1; display: flex; align-items: center; justify-content: center; gap: 15px; }
-        .log-avatar-wrap { position: relative; display: flex; flex-direction: column; align-items: center;}
         
-        /* 🔥 详细记录里两人对战的头像修改处 🔥 */
         #match-log-list .log-avatar { 
             width: 80px; 
             height: 40px; 
@@ -313,22 +118,8 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         }
 
         .log-crown { position: absolute; top: -12px; right: -8px; font-size: 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));}
-.log-lose-overlay { position: absolute; top: -10%; left: 30%; transform: translate(-50%, -50%); font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 900;opacity: 1; color: white); text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 5px rgba(0,0,0,1); letter-spacing: 2px; z-index: 5; pointer-events: none; }
-/* 
-        ================================================================================
-        【控制台 6：对局标签样式终极调参面板】 (小白专用)
-        [控制目标]：详细记录里的各种小标签（首胜、连胜、连败、自爆等）
-        [如何调整大小和间距]：
-          1. font-size: 9px;   -> 文字大小。想字大一点改 10px 或 11px。
-          2. padding: 2px 5px; -> 标签内部的上下左右留白。第一个数字(2px)是上下，第二个(5px)是左右。
-          3. border-radius: 4px; -> 圆角程度。改成 0px 就是方块，改成 10px 就是圆丸子。
-        
-        [如何添加特效 (备用代码，你可以复制替换进下方对应的标签里)]：
-          * 霓虹发光特效：box-shadow: 0 0 5px #ff00ea, 0 0 10px #ff00ea;
-          * 边框特效：border: 1px solid #00f3ff;
-          * 文字发光特效：text-shadow: 0 0 3px #fff;
-        ================================================================================
-        */
+        .log-lose-overlay { position: absolute; top: -10%; left: 30%; transform: translate(-50%, -50%); font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 900; opacity: 1; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 5px rgba(0,0,0,1); letter-spacing: 2px; z-index: 5; pointer-events: none; }
+
         .log-tags { position: absolute; bottom: -10px; display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; width: 120%; z-index: 10;}
         .match-tag { 
             font-size: 14px; 
@@ -337,78 +128,38 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             font-weight: bold; 
             white-space: nowrap; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            transition: all 0.3s ease; /* 动画过渡，让变化更平滑 */
+            transition: all 0.3s ease; 
         }
         
-/* 
-        ================================================================================
-        【控制台 7：独立标签颜色大赏 & 特效库】 (小白专用)
-        [如何修改标签颜色]：
-          background: #颜色代码; -> 控制标签的底色。
-          color: #颜色代码;      -> 控制标签里面字体的颜色。
-          
-        [如何调整连胜火焰的火势大小]：
-          找到下面的 @keyframes fire-glow-1 (这是小火) / 2 (中火) / 3 (大火)
-          box-shadow: 0 0 15px #ff8800; -> 这里的 15px 就是火苗蹿出去的距离，数字越大，火烧得越旺！
-          
-        [文字呼吸跳动速度调整]：
-          .text-fire-breathe 里的 animation: text-breathe 0.6s -> 0.6s代表呼吸一次的时间。改成 0.2s 就会像心脏狂跳一样！
-        ================================================================================
-        */
-        
-        /* === 独立标签颜色库 === */
-        .tag-first { background: #fff100; color: #000; } /* 柔和粉 */
-        .tag-streak { background: #f39800; color: #fff; border: 1px solid #fff; } /* 赛博青 (连胜基础色) */
-        .tag-bounty { background: #ff2a2a; color: #fff; box-shadow: 0 0 5px #ff2a2a; } /* 滴血红 (终结红名) */
-        .tag-clean { background: #00ff66; color: #000; box-shadow: 0 0 5px #00ff66; } /* 毒液绿 (清台) */
-        .tag-shutout { background: #ff00d4; color: #000; box-shadow: 0 0 5px #fcee0a; } /* 闪电黄 (剃头) */
-        .tag-lose { background: #555; color: #fff; } /* 阴沉灰 (连败基础色) */
-        .tag-foul { background: #ff7b00; color: #fff; border: 1px dashed #fff; box-shadow: 0 0 5px #ff7b00; } /* 警告橙 (自爆) */
-        .tag-victim { background: #b026ff; color: #fff; text-shadow: 0 0 3px #fff; box-shadow: 0 0 5px #b026ff; } /* 丢人紫 (被剃光头) */
+        .tag-first { background: #fff100; color: #000; } 
+        .tag-streak { background: #f39800; color: #fff; border: 1px solid #fff; } 
+        .tag-bounty { background: #ff2a2a; color: #fff; box-shadow: 0 0 5px #ff2a2a; } 
+        .tag-clean { background: #00ff66; color: #000; box-shadow: 0 0 5px #00ff66; } 
+        .tag-shutout { background: #ff00d4; color: #000; box-shadow: 0 0 5px #fcee0a; } 
+        .tag-lose { background: #555; color: #fff; } 
+        .tag-foul { background: #ff7b00; color: #fff; border: 1px dashed #fff; box-shadow: 0 0 5px #ff7b00; } 
+        .tag-victim { background: #b026ff; color: #fff; text-shadow: 0 0 3px #fff; box-shadow: 0 0 5px #b026ff; } 
 
-        /* === 连胜终极火焰燃烧特效库 (3个等级的火势) === */
-        /* 等级1：初起小火 */
-        @keyframes fire-glow-1 { 
-            0% { box-shadow: 0 0 8px #ff5500, inset 0 0 5px #ff5500; border-color: #ff5500; } 
-            100% { box-shadow: 0 0 18px #ffaa00, inset 0 0 10px #ffaa00; border-color: #ffaa00; } 
-        }
-        /* 等级2：熊熊中火 */
-        @keyframes fire-glow-2 { 
-            0% { box-shadow: 0 0 15px #ff2a00, inset 0 0 10px #ff2a00; border-color: #ff2a00; } 
-            100% { box-shadow: 0 0 25px #ff7b00, inset 0 0 15px #ff7b00; border-color: #ff7b00; } 
-        }
-        /* 等级3：漫天大火 (带点红色爆燃) */
-        @keyframes fire-glow-3 { 
-            0% { box-shadow: 0 0 20px #ff0000, 0 0 30px #ff5500, inset 0 0 20px #ff0000; border-color: #ff0000; } 
-            100% { box-shadow: 0 0 35px #ffaa00, 0 0 45px #ff0000, inset 0 0 25px #ffaa00; border-color: #ffaa00; } 
-        }
+        @keyframes fire-glow-1 { 0% { box-shadow: 0 0 8px #ff5500, inset 0 0 5px #ff5500; border-color: #ff5500; } 100% { box-shadow: 0 0 18px #ffaa00, inset 0 0 10px #ffaa00; border-color: #ffaa00; } }
+        @keyframes fire-glow-2 { 0% { box-shadow: 0 0 15px #ff2a00, inset 0 0 10px #ff2a00; border-color: #ff2a00; } 100% { box-shadow: 0 0 25px #ff7b00, inset 0 0 15px #ff7b00; border-color: #ff7b00; } }
+        @keyframes fire-glow-3 { 0% { box-shadow: 0 0 20px #ff0000, 0 0 30px #ff5500, inset 0 0 20px #ff0000; border-color: #ff0000; } 100% { box-shadow: 0 0 35px #ffaa00, 0 0 45px #ff0000, inset 0 0 25px #ffaa00; border-color: #ffaa00; } }
         
         .fire-lvl-1 { border: 2px solid; animation: fire-glow-1 0.7s infinite alternate; }
         .fire-lvl-2 { border: 2px solid; animation: fire-glow-2 0.5s infinite alternate; }
         .fire-lvl-3 { border: 2px solid; animation: fire-glow-3 0.3s infinite alternate; }
 
-        /* === 连胜文字呼吸跳动动画 === */
-        @keyframes text-breathe { 
-            0% { transform: scale(1); opacity: 0.9; } 
-            100% { transform: scale(1.08); opacity: 1; text-shadow: 0 0 12px #fff; } 
-        }
+        @keyframes text-breathe { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.08); opacity: 1; text-shadow: 0 0 12px #fff; } }
         .text-fire-breathe { animation: text-breathe 0.5s infinite alternate; }
 
-        /* 连胜特效补充 */
-        @keyframes ultra-shine {
-            0% { box-shadow: 0 0 5px var(--cy-cyan); transform: scale(1); }
-            100% { box-shadow: 0 0 15px #fff, 0 0 20px var(--cy-cyan); transform: scale(1.1); }
-        }
+        @keyframes ultra-shine { 0% { box-shadow: 0 0 5px var(--cy-cyan); transform: scale(1); } 100% { box-shadow: 0 0 15px #fff, 0 0 20px var(--cy-cyan); transform: scale(1.1); } }
         .tag-ultra-shine { animation: ultra-shine 0.5s infinite alternate; }
 
-        .log-time { font-size: 20px; color: #aaa; text-align: right; width: 70px; font-family: 'Oswald';}
         .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: center; background: rgba(0,0,0,0.4); }
         .schedule-table th { background: var(--cy-cyan); color: #000; padding: 10px 5px; font-weight: bold; border: 1px solid #333; }
         .schedule-table td { padding: 10px 5px; border: 1px solid #333; color: #ddd; font-family: 'Oswald', sans-serif;}
 
-        /* 底部导航与弹窗 */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; display: flex; justify-content: space-around; align-items: center; background: rgba(10, 10, 15, 0.95); border-top: 1px solid #222; backdrop-filter: blur(10px); z-index: 100;}
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 10px; font-weight: bold; transition: 0.3s; width: 16%; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #555; font-size: 10px; font-weight: bold; transition: 0.3s; width: 25%; }
         .nav-item.active { color: var(--cy-cyan); transform: translateY(-2px); text-shadow: 0 0 8px rgba(0,243,255,0.5); }
         .nav-icon { font-size: 18px; margin-bottom: 2px; }
 
@@ -417,274 +168,61 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         .modal-btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .dispatch-select { background: #000; border: 1px solid var(--cy-pink); color: #fff; padding: 12px; font-size: 16px; border-radius: 6px; margin-top: 10px; }
     
-/* 
-/* 
-        ================================================================================
-        【控制台 5：全页面头像移动与缩放的终极指南 (绝对生效版！)】
-        [原理]：图片被放大时，必须指定“放大的中心点”，否则它默认从肚子(50% 50%)放大！
-
-        [真·核心 2 连招]：
-        第一招：transform: scale(1.5); 
-           -> 控制放大倍数，1.5 是放大 1.5 倍，2.5 就是放大 2.5 倍。
-
-        第二招：transform-origin: 50% 10%; 
-           -> 🔥【控制图片上下左右移动的真正摇杆】🔥
-           -> 50% (左边数字)：控制左右平移。50%永远是居中。
-           -> 10% (右边数字)：控制上下平移。0%代表镜头死死锁住头皮，50%锁住肚子，100%锁住脚。
-           -> 💡 [终极秘籍]：放大后如果看不到脸，就把第二个数字往小了调（0% 或 10%）！人脸瞬间就下来了！
-        ================================================================================
-        */
-
-        /* 1. 核心赛场 (主战大头像) */
         .c-img-wrapper { overflow: hidden !important; }
-        .c-img-wrapper img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50% 15%; /* 👈 摇杆在这里：控制脸部上下对齐 */
-            transform: scale(1.1);     /* 👈 放大倍数 */
-        }
-
-        /* 2. 核心赛场 (底部候补席小头像) */
+        .c-img-wrapper img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 15%; transform: scale(1.1); }
         .q-avatar-frame { width: 60px; height: 60px; border-radius: 8px; border: 2px solid #555; overflow: hidden; flex-shrink: 0; }
         .q-item.is-resting .q-avatar-frame { filter: grayscale(100%) opacity(0.4); border-color: #333; }
-        .q-avatar-frame img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50% 0%; 
-            transform: scale(2.1); 
-        }
-
-        /* 3. 风云榜 (左侧头像) */
-        .rank-left { width: 100px; position: relative; flex-shrink: 0; border-top-left-radius: 4px; border-bottom-left-radius: 4px; overflow: hidden; }
-        .rank-left img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50% 10%; /* 👈 把这里改小(如0%)，脸就往下走；改大(如50%)，脸就往上跑 */
-            transform: scale(2.3); 
-        }
-
-        /* 4. 荣誉殿堂 (右侧成就头像) */
-        .ach-right-avatar { width: 65px; height: 65px; flex-shrink: 0; border-radius: 6px; border: 1px solid #555; overflow: hidden; }
-        .ach-right-avatar img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50%30%; 
-            transform: scale(2.3); 
-        }
-
-        /* 5. 宿命恩怨簿 (主视角大头像) */
+        .q-avatar-frame img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 0%; transform: scale(2.1); }
         .h2h-owner-frame { width: 110px; height: 90px; border-radius: 8px; border: 2px solid black; margin-right: 15px; flex-shrink: 0; overflow: hidden; }
-        .h2h-owner-frame img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50% 27%; 
-            transform: scale(2); 
-        }
-
-        /* 6. 宿命恩怨簿 (对手小头像) */
+        .h2h-owner-frame img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 27%; transform: scale(2); }
         .h2h-opp-frame { width: 75px; height: 75px; border-radius: 6px; border:3px solid #555; margin-left: 6px; flex-shrink: 0; overflow: hidden; }
-        .h2h-opp-frame img { width: 100%; height: 150%; 
-            transform-origin: 50%17%; 
-            transform: scale(2.2); 
-        }
-
-        /* 7. 对局详情列表 (双人对战头像) */
+        .h2h-opp-frame img { width: 100%; height: 150%; transform-origin: 50% 17%; transform: scale(2.2); }
         .log-avatar-frame { width: 80px; height: 120px; border-radius: 8px; border: 3px solid; overflow: hidden; position: relative; margin: 0; }
-        .log-avatar-frame img { width: 100%; height: 100%; object-fit: cover; 
-            transform-origin: 50% 15%; 
-            transform: scale(2); 
+        .log-avatar-frame img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 15%; transform: scale(2); }
+
+        .v2-win-btn {
+            width: 100%;
+            background: linear-gradient(180deg, #66b5ff, #3b82f6);
+            border: none;
+            border-radius: 30px; 
+            color: white;
+            font-size: 18px;
+            font-weight: 900;
+            padding: 12px 0;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 1px;
         }
+        .v2-win-btn:active { transform: scale(0.96); background: #3b82f6; }
 
-/* 
-        ================================================================================
-        【控制台 11：积分曲线图 - 头像与相框调参面板】 (小白专属)
-        [控制目标]：曲线末端的玩家头像相框大小，以及里面的照片移动和缩放
-        
-        [如何调整相框大小 (外壳)]：
-          1. width: 40px; height: 40px; -> 这决定了图表上头像框的最终大小。如果觉得头像挡住了线，可以改小到 30px。
-          2. border: 2px solid;         -> 相框的粗细，默认2像素。
-          3. border-radius: 8px;        -> 圆角程度，改 50% 就是纯正的圆形头像！
-
-        [如何调整相框里面的照片 (照相机镜头)]：
-          1. transform: scale(2.0);     -> 照片的放大倍数。2.0就是放大两倍。
-          2. transform-origin: 50% 15%; -> 照片的上下左右移动摇杆。50%居中，15%把脸往下扯（详细原理参考前面控制台5）。
-        ================================================================================
-        */
-        .chart-avatar-frame {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid;
-            overflow: hidden;
+        .v2-external-name {
             background: #000;
+            border: 2px solid #5fb4ff;
+            border-radius: 25px;
+            padding: 6px 25px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px; 
+            box-shadow: 0 0 12px rgba(95, 180, 255, 0.3);
+            cursor: pointer;
+            transition: 0.2s;
         }
-        .chart-avatar-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform-origin: 50% 15%; /* 控制图片上下移动的摇杆 */
-            transform: scale(2.0);     /* 放大倍数 */
+        .v2-external-name:active { transform: scale(0.95); background: #111; }
+        .v2-name-text { color: white; font-size: 18px; font-weight: 900; }
+        .v2-refresh-icon {
+            background: #3b82f6; 
+            border-radius: 4px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px;
+            color: white;
         }
-        
-        /* 图表容器底板背景 */
-        .cyber-chart-bg {
-            position: relative;
-            width: 100%;
-            height:700px; /* 整个图表区域的高度，嫌高可以改 300px */
-            background: linear-gradient(180deg, rgba(16,20,30,0.9), rgba(5,5,10,0.9));
-            border: 1px solid #333;
-            border-radius: 8px;
-            margin-top: 15px;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-        }
-
-/* 
-/* 
-================================================================================
-【控制台 13：核心赛场 V2卡牌版 - 独立悬浮得分标签 (小白专属调参面板)】
-[目标]：控制图2中 “基础得分”、“红名胜局分” 等发光胶囊的外观。
-
-[排版控制]：
-  1. gap: 8px; -> 胶囊与胶囊之间的上下距离。改大胶囊就分得更开。
-  2. margin-bottom: 15px; -> 这一排胶囊距离下方“胜局可得”黑框的距离。
-
-[独立胶囊外观控制 (.cyber-tag-row)]：
-  1. padding: 6px 15px; -> 决定胶囊的胖瘦。6px是上下高度，15px是左右长度。
-  2. border-radius: 20px; -> 圆角程度。20px就是图2那种纯正的圆头胶囊，改成0px就是方块。
-  3. background: rgba(0,0,0,0.6); -> 胶囊内部的半透明黑底。0.6是透明度。
-  4. border: 1px solid; -> 外部那根发光的边框线粗细。
-
-[备用炫酷特效 (可复制粘贴到下方 .cyber-tag-row 里)]：
-  * 呼吸闪烁特效： animation: tag-breathe 1.5s infinite alternate;
-================================================================================
-*/
-.cyber-tag-container {
-    display: flex;
-    flex-direction: column;
-    gap: 4px; /* 胶囊之间的间距 */
-    width: 100%;
-    margin-bottom: 4px;
-}
-
-.cyber-tag-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.1px 8px; /* 胶囊内边距 */
-    border-radius: 20px; /* 图2风格的圆头胶囊 */
-    background: rgba(0, 0, 0, 0.6); /* 半透明黑底 */
-    backdrop-filter: blur(4px);
-    border: 1.5px solid; /* 边框粗细 */
-}
-
-/* 左侧文字：得分名称 */
-.tag-label { font-size: 13px; font-weight: 900; }
-/* 右侧文字：具体分数 */
-.tag-value { font-size: 16px; font-weight: 900; font-family: 'Oswald', sans-serif; }
-
-/* --- 不同类型得分的颜色与发光配置 --- */
-/* 1. 基础得分 (纯白色) */
-.type-base { border-color: #ffffff; box-shadow: inset 0 0 8px rgba(255,255,255,0.2), 0 0 5px rgba(255,255,255,0.4); }
-.type-base .tag-label, .type-base .tag-value { color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
-
-/* 2. 红名胜局分 (赛博粉) */
-.type-red { border-color: var(--cy-pink); box-shadow: inset 0 0 8px rgba(255,0,234,0.2), 0 0 5px rgba(255,0,234,0.4); }
-.type-red .tag-label, .type-red .tag-value { color: var(--cy-pink); text-shadow: 0 0 5px rgba(255,0,234,0.5); }
-
-/* 3. 连胜递增分 (火焰橙) */
-.type-streak { border-color: #ff7b00; box-shadow: inset 0 0 8px rgba(255,123,0,0.2), 0 0 5px rgba(255,123,0,0.4); }
-.type-streak .tag-label, .type-streak .tag-value { color: #ff7b00; text-shadow: 0 0 5px rgba(255,123,0,0.5); }
-
-/* 4. 终结连胜赏金 (滴血红) */
-.type-bounty { border-color: var(--cy-red); box-shadow: inset 0 0 8px rgba(255,42,42,0.2), 0 0 5px rgba(255,42,42,0.4); }
-.type-bounty .tag-label, .type-bounty .tag-value { color: var(--cy-red); }
-
-/* 5. 赏金递增 (闪电黄) */
-.type-bounty-inc { border-color: var(--cy-yellow); box-shadow: inset 0 0 8px rgba(252,238,10,0.2), 0 0 5px rgba(252,238,10,0.4); }
-.type-bounty-inc .tag-label, .type-bounty-inc .tag-value { color: var(--cy-yellow); }
-
-/* 
-================================================================================
-【控制台 14：胜局可得黑框 & 判定胜利大按钮 (小白专属调参面板)】
-[v2-expected-box 黑框调节]：
-  1. padding: 8px 0; -> 上下高度。
-  2. border-radius: 8px; -> 黑框的圆角。改成 20px 就变成圆形的了。
-  3. background: #111; -> 黑色背景的深度。
-
-[v2-win-btn 蓝色大按钮调节]：
-  1. background: linear-gradient(...); -> 按钮的渐变色。目前是图2的淡蓝到深蓝。
-  2. font-size: 18px; -> 按钮里文字的大小。
-  3. padding: 12px 0; -> 按钮的高度。改大变厚，改小变扁。
-================================================================================
-*/
-.v2-expected-box {
-    width: 100%;
-    background: rgba(15, 15, 15, 0.85); /* 深色背景 */
-    border: 1px solid #333; /* 灰色边框 */
-    border-radius: 8px; /* 微圆角 */
-    padding: 3px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white; /* “胜局可得”文字颜色 */
-    font-size: 12px;
-    font-weight: 900;
-    margin-bottom: 4px; /* 距离下方按钮的距离 */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-.v2-expected-num {
-    color: #00ff00; /* 图2中的绿色大数字 */
-    font-size: 45px;
-    font-family: 'Oswald', sans-serif;
-    margin-left: 10px;
-    text-shadow: 0 0 10px rgba(0,255,0,0.4);
-    line-height: 1;
-}
-
-.v2-win-btn {
-    width: 100%;
-    background: linear-gradient(180deg, #66b5ff, #3b82f6); /* 图2 专属高亮渐变蓝 */
-    border: none;
-    border-radius: 30px; /* 图2 专属全圆角 */
-    color: white;
-    font-size: 18px;
-    font-weight: 900;
-    padding: 12px 0;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); /* 蓝色发光阴影 */
-    cursor: pointer;
-    transition: 0.2s;
-    letter-spacing: 1px;
-}
-.v2-win-btn:active { transform: scale(0.96); background: #3b82f6; }
-
-/* 
-================================================================================
-【控制台 15：卡牌底部悬浮玩家名字标签 (小白专属调参面板)】
-[目标]：图2最底部那个外围发蓝光的 “汤必达 🔄” 标签
-[调节参数]：
-  1. margin-top: 15px; -> 控制这个名字牌距离上方大卡片的距离。
-  2. border: 2px solid #5fb4ff; -> 控制外边框的颜色（默认浅蓝色）和粗细。
-  3. padding: 6px 25px; -> 名字牌的长度和高度。
-================================================================================
-*/
-.v2-external-name {
-    background: #000;
-    border: 2px solid #5fb4ff; /* 图2专属蓝色边框 */
-    border-radius: 25px;
-    padding: 6px 25px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px; /* 距离上方卡片的间距 */
-    box-shadow: 0 0 12px rgba(95, 180, 255, 0.3);
-    cursor: pointer;
-    transition: 0.2s;
-}
-.v2-external-name:active { transform: scale(0.95); background: #111; }
-.v2-name-text { color: white; font-size: 18px; font-weight: 900; }
-.v2-refresh-icon {
-    background: #3b82f6; /* 图2的蓝色方块底 */
-    border-radius: 4px; /* 图2的小方块圆角 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 3px;
-    color: white;
-}
-
-</style>
+    </style>
 </head>
 <body>
 
@@ -697,32 +235,17 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         <div id="mqtt-status" style="font-size: 11px; font-weight:bold;">🔴 离线</div>
     </div>
     
-<!-- 新增：全页面顶部区间选择条 -->
     <div id="view-filter-bar" onclick="openRoundModal()" style="background: linear-gradient(90deg, #11998e, #38ef7d); padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #000; font-weight: 900; font-size: 13px; border-bottom: 2px solid #000; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 9;">
         <span id="filter-bar-text">📅 当前数据视图：🔥 全部总区间</span>
         <span>切换区间 🔽</span>
     </div>
 
+    <!-- 赛场 -->
     <div id="page-play" class="page-container active">
-        <h2 class="title-glow">核心赛场</h2>
-        <div class="timer-header">
-            <div class="game-num" id="current-game-num">第 1 局</div>
-            <div class="timer-display" id="match-timer-display">00:00</div>
-            <button class="timer-btn" id="btn-start-timer" onclick="startTimer()">开始计时</button>
+        <div class="timer-header" style="justify-content: center; margin-bottom: 20px;">
+            <div class="game-num" id="current-game-num" style="font-size: 24px; font-weight: 900; color: var(--cy-yellow); text-shadow: 0 0 10px rgba(252,238,10,0.5);">第 1 局</div>
         </div>
         <div id="play-area"></div>
-        
-        <!-- ================================================================================
-             【控制台 27：核心赛场 规则讲解区 UI调参面板】(小白专属)
-             [排版控制]：
-             1. padding: 10px; -> 控制面板内部的上下左右留白。
-             2. margin-bottom: 15px; -> 控制规则面板和下方“候补席”的间距。
-             3. font-size: 11px; -> 下方 JS 里控制了规则文字的大小。如果觉得小，可以在下方的 JS 代码里改成 12px。
-             4. gap: 6px; -> 每行规则之间的上下缝隙。
-        ================================================================================ -->
-        <div class="premium-panel" style="padding: 10px; margin-bottom: 15px;" id="rules-panel-container">
-            <!-- 这里的规则内容将由底下的 JS 自动读取并填入 -->
-        </div>
         <div class="premium-panel" style="padding: 10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
                 <h4 style="font-size: 14px; color: var(--cy-cyan);">📋 候补与休息序列</h4>
@@ -731,23 +254,13 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
         </div>
     </div>
 
-    <div id="page-stats" class="page-container">
-        <h2 class="title-glow">战绩风云榜</h2>
-        <div style="text-align: right; margin-bottom: 10px; font-size: 11px; color: var(--cy-red);"></div>
-        <div id="stats-list"></div>
-        <div id="last-match-date" style="text-align: center; color: #888; font-size: 12px; margin-top: 20px; font-weight: bold;">截止 --年--月--日</div>
-    </div>
-
-    <div id="page-achieve" class="page-container">
-        <h2 class="title-glow" style="color:var(--cy-yellow); background:none; text-shadow:0 0 15px rgba(252,238,10,0.6); -webkit-text-fill-color: var(--cy-yellow);">荣誉殿堂</h2>
-        <div class="achieve-list-container" id="achieve-list"></div>
-    </div>
-
+    <!-- 1 V 1 -->
     <div id="page-h2h" class="page-container">
         <h2 class="title-glow">PK</h2>
         <div id="h2h-list"></div>
     </div>
 
+    <!-- 详情 -->
     <div id="page-details" class="page-container">
         <h2 class="title-glow" style="color:var(--cy-green); background:none; -webkit-text-fill-color: var(--cy-green);">对局数据中心</h2>
         <div class="sub-tabs">
@@ -755,23 +268,20 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             <div class="sub-tab-btn" id="tab-btn-schedule" onclick="switchDetailTab('schedule')">📅 日程表格</div>
         </div>
         <div id="view-match-log">
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button class="btn-prime" style="padding:8px; font-size:14px; background:#222; border:1px solid var(--cy-cyan); color:var(--cy-cyan);" onclick="toggleSort('id')">按局数排序 ↕</button>
-                <button class="btn-prime" style="padding:8px; font-size:14px; background:#222; border:1px solid var(--cy-cyan); color:var(--cy-cyan);" onclick="toggleSort('time')">按耗时排序 ↕</button>
-            </div>
             <div id="match-log-list"></div>
         </div>
         <div id="view-match-schedule" style="display:none;">
             <table class="schedule-table">
-                <thead><tr><th>日期</th><th>局数</th><th>总耗时</th><th>场均时间</th></tr></thead>
+                <thead><tr><th>日期</th><th>局数范围</th><th>总场次</th></tr></thead>
                 <tbody id="schedule-tbody"></tbody>
             </table>
         </div>
     </div>
 
+    <!-- 设置 -->
     <div id="page-settings" class="page-container">
         <h2 class="title-glow">系统设置</h2>
-<div class="premium-panel">
+        <div class="premium-panel">
             <label style="color:var(--cy-cyan); font-weight:bold; font-size:14px;">🌐 网络同步 (永久绑定唯一频道)</label>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <input type="text" id="room-input" value="房间已永久锁定为 8888" readonly style="color:var(--cy-yellow); text-align:center; background:#000; cursor:not-allowed; border: 1px solid #444;">
@@ -791,33 +301,13 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             </div>
             <input type="file" id="import-excel" style="display:none" accept=".xlsx, .xls" onchange="importExcel(event)">
         </div>
-        <div class="premium-panel">
-            <label style="color:var(--cy-pink); font-weight:bold; font-size:14px;">⚙️ 积分规则设定</label>
-            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px;"><span>高手 赢 高手:</span> <input type="number" id="rule-hh" value="1" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>低手 赢 低手:</span> <input type="number" id="rule-ll" value="1" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>高手 赢 低手:</span> <input type="number" id="rule-hl" value="1" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; color: var(--cy-red); font-weight:bold; font-size:13px;"><span>低手 爆冷 高手:</span> <input type="number" id="rule-lh" value="3" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; color: var(--cy-green); font-weight:bold; font-size:13px; margin-top:10px;"><span>🌟 一杆清台 (附加分):</span> <input type="number" id="rule-clean" value="2" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; color: var(--cy-yellow); font-weight:bold; font-size:13px;"><span>🌟 剃光头 (附加分):</span> <input type="number" id="rule-shutout" value="2" style="width: 60px; padding: 5px;"></div>
-            <hr style="border-color: #333; margin: 10px 0;">
-            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名连胜阈值:</span> <input type="number" id="rule-streak" value="3" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>终结红名赏金:</span> <input type="number" id="rule-bounty" value="2" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; font-size:13px;"><span>红名后胜局分:</span> <input type="number" step="0.5" id="rule-reduced" value="0.5" style="width: 60px; padding: 5px;"></div>
-<!-- 新增：动态递增分数设置区 -->
-            <hr style="border-color: #333; margin: 10px 0;">
-            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--cy-cyan); font-weight:bold;"><span>🔄 连胜递增分数 (X):</span> <input type="number" step="0.5" id="rule-streak-inc" value="0.5" style="width: 60px; padding: 5px;"></div>
-            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--cy-yellow); font-weight:bold;"><span>💸 终结赏金递增 (Y):</span> <input type="number" step="0.5" id="rule-bounty-inc" value="1" style="width: 60px; padding: 5px;"></div>
-            <button class="btn-prime" onclick="saveRules()" style="margin-top: 15px; background:linear-gradient(90deg, #8E2DE2, #4A00E0);">保存并同步规则</button>
-        </div>
+        
         <div class="premium-panel">
             <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">👥 参赛选手登记与专属颜色</label>
             <div id="player-edit-list" style="margin-top:10px;"></div>
             <button class="btn-prime" onclick="addPlayerForm()" style="margin-top: 10px;">+ 录入新选手</button>
         </div>
 
-<!-- ================================================================================
-             新增：同日轮次区间切割 (高级功能)
-        ================================================================================ -->
         <div class="premium-panel" style="border-top: 2px solid #b026ff; border-bottom: 2px solid #ff00ea;">
             <label style="color:var(--cy-pink); font-weight:bold; font-size:14px;">✂️ 同日轮次区间切割 (高级)</label>
             <p style="font-size:10px; color:#888; margin-top:5px;">如遇同一天分早晚场，在此输入下半场的起始局数(X)。系统会自动将当天的对局切分为 01、02 两个独立计分区间。</p>
@@ -826,101 +316,61 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
                 <input type="number" id="split-match-num" placeholder="输入新轮次起始局数(X)" style="width:60%; padding:8px; margin:0; text-align:center;">
                 <button class="btn-prime" style="width:35%; padding:8px; background:linear-gradient(90deg, #b026ff, #ff00ea);" onclick="addCustomSplit()">✂️ 切割</button>
             </div>
-            
-            <!-- 这里用来显示已经切好的点，方便撤销 -->
             <div id="split-list-area" style="margin-top: 10px; display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
-<!-- ================================================================================
-             新增：历史对局时间修改器 面板
-        ================================================================================ -->
-        <div class="premium-panel" style="border-top: 2px solid #f7971e; border-bottom: 2px solid #ffd200;">
-            <label style="color:var(--cy-yellow); font-weight:bold; font-size:14px;">⏱️ 历史对局时间修正</label>
-            <p style="font-size:10px; color:#888; margin-top:5px;">如遇忘记暂停导致单局耗时过长，或发生时间错误，可在此修正。</p>
-            
-            <select id="edit-match-select" class="dispatch-select" style="margin-top:10px;" onchange="loadMatchForEdit()">
-                <option value="-1">请选择要修改的对局...</option>
-            </select>
-            
-            <!-- 默认隐藏，选择了某局之后才会显示这里的修改框 -->
-            <div id="edit-match-area" style="display:none; margin-top:10px; background:rgba(0,0,0,0.5); padding:10px; border-radius:6px; border:1px dashed #555;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                    <span style="font-size:13px; color:#ccc;">对局耗时(秒):</span>
-                    <!-- 这里可以自己填入正确的秒数 -->
-                    <input type="number" id="edit-match-duration" style="width:120px; padding:5px; margin:0; text-align:center;">
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                    <span style="font-size:13px; color:#ccc;">发生时间:</span>
-                    <!-- 这里可以修改这局发生的时间 -->
-                    <input type="datetime-local" id="edit-match-time" style="width:180px; padding:5px; margin:0; font-size:12px;">
-                </div>
-                <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200); color:#000; font-weight:900;" onclick="saveMatchEdit()">💾 保存修改并同步数据</button>
-            </div>
-        </div>
         <button class="btn-prime btn-alert" onclick="resetGame()" style="margin-top: 30px;">⚠️ 清空所有战绩并重置开局</button>
     </div>
 
-<!-- 新增：曲线图表隐藏页面 -->
-    <div id="page-chart" class="page-container">
-        <h2 class="title-glow" style="color:#00f3ff; background:none; text-shadow:0 0 15px rgba(0,243,255,0.6); -webkit-text-fill-color: #00f3ff;">得分演化曲线</h2>
-        <div class="cyber-chart-bg" id="chart-render-area">
-            <!-- 曲线图会由 JS 动态注入到这里 -->
-        </div>
-        <div style="text-align:center; font-size:12px; color:#666; margin-top:15px; font-weight:bold;">X轴：总对局数发展进度 &nbsp;&nbsp;|&nbsp;&nbsp; Y轴：累计获得积分</div>
-    </div>
-
-    <!-- 底部导航 (加入曲线并重排编号) -->
+    <!-- 底部导航 -->
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchTab(0, this)"><div class="nav-icon">🎱</div>赛场</div>
-        <div class="nav-item" onclick="switchTab(1, this)"><div class="nav-icon">📊</div>风云榜</div>
-        <div class="nav-item" onclick="switchTab(2, this)"><div class="nav-icon">📈</div>曲线</div>
-        <div class="nav-item" onclick="switchTab(3, this)"><div class="nav-icon">🏆</div>荣誉</div>
-        <div class="nav-item" onclick="switchTab(4, this)"><div class="nav-icon">⚔️</div>1 V 1</div>
-        <div class="nav-item" onclick="switchTab(5, this)"><div class="nav-icon">📖</div>详情</div>
-        <div class="nav-item" onclick="switchTab(6, this)"><div class="nav-icon">⚙️</div>设置</div>
+        <div class="nav-item" onclick="switchTab(1, this)"><div class="nav-icon">⚔️</div>1 V 1</div>
+        <div class="nav-item" onclick="switchTab(2, this)"><div class="nav-icon">📖</div>详情</div>
+        <div class="nav-item" onclick="switchTab(3, this)"><div class="nav-icon">⚙️</div>设置</div>
     </div>
 
     <!-- 弹窗合集 -->
-<div class="modal-bg" id="roundModal">
+    <div class="modal-bg" id="roundModal">
         <div class="modal-box" style="max-width: 90%; width: 400px; padding: 15px;">
             <h3 style="color:var(--cy-cyan); margin-bottom: 15px; font-weight: 900; letter-spacing: 1px;">📅 选择记录区间 (独立轮次)</h3>
             <div style="max-height: 60vh; overflow-y: auto; border: 1px solid #333; border-radius: 6px; background: rgba(0,0,0,0.5);">
                 <table class="schedule-table" style="margin-top: 0; font-size: 14px;">
-                    <thead><tr><th>日期</th><th>局数</th><th>总耗时</th><th>场均时间</th></tr></thead>
+                    <thead><tr><th>日期区间</th><th>局数范围</th><th>总场次</th></tr></thead>
                     <tbody id="round-tbody"></tbody>
                 </table>
             </div>
             <button class="btn-prime" style="margin-top: 15px; background: #222; border: 1px solid #555; color: #ccc;" onclick="document.getElementById('roundModal').style.display='none'">关闭窗口</button>
         </div>
     </div>
-<!-- 换人轮换弹窗 -->
+    
     <div class="modal-bg" id="subModal">
         <div class="modal-box">
             <h3 style="color:var(--cy-cyan); margin-bottom: 5px;">🔄 玩家轮换</h3>
             <p style="color: #aaa; font-size: 12px; margin-bottom: 15px;">将 <span id="sub-old-name" style="color:#fff; font-weight:bold;"></span> 轮换下场休息<br>(连胜状态将被保留)</p>
-            <select id="sub-select" class="dispatch-select" style="margin-bottom: 15px;">
-                <!-- 下拉框内容由JS动态生成 -->
-            </select>
+            <select id="sub-select" class="dispatch-select" style="margin-bottom: 15px;"></select>
             <div class="modal-btn-group" style="flex-direction: row;">
                 <button class="btn-prime" style="flex: 1; background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="confirmSub()">确认上场</button>
                 <button class="btn-prime" style="background: transparent; border:1px solid #555; color:#aaa; flex:1;" onclick="closeModals()">取消</button>
             </div>
         </div>
     </div>
+    
     <div class="modal-bg" id="winMethodModal">
         <div class="modal-box" style="max-width: 380px;">
             <h3 style="color:var(--cy-cyan); margin-bottom: 5px;">战局结算</h3>
             <p style="color: #aaa; font-size: 12px;">判定 <span id="win-p-name" style="color:#fff; font-weight:bold; font-size:14px;"></span> 获得胜利</p>
             <div class="modal-btn-group">
                 <button class="btn-prime" onclick="openConfirmModal('normal')">凭实力正常获胜</button>
-                <button class="btn-prime" style="background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="openConfirmModal('clean')">🔥 一杆清台 (附加额外分)</button>
-                <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200);" onclick="openConfirmModal('shutout')">💀 剃光头 (附加额外分)</button>
-<button class="btn-prime" style="background:linear-gradient(90deg, #ff00ea, #fcee0a); color:#000; text-shadow:none; font-weight:900;" onclick="openConfirmModal('clean_shutout')">🔥💀 一杆清台 + 剃光头 (拿双份附加分)</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #11998e, #38ef7d);" onclick="openConfirmModal('clean')">🔥 一杆清台</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #f7971e, #ffd200);" onclick="openConfirmModal('shutout')">💀 剃光头</button>
+                <button class="btn-prime" style="background:linear-gradient(90deg, #ff00ea, #fcee0a); color:#000; text-shadow:none; font-weight:900;" onclick="openConfirmModal('clean_shutout')">🔥💀 一杆清台 + 剃光头</button>
                 <button class="btn-prime" style="background:linear-gradient(90deg, #f12711, #f5af19);" onclick="openConfirmModal('foul')">对手失误送局 (白球同落等)</button>
                 <button class="btn-prime" style="background: transparent; border:1px solid #555; box-shadow:none; color:#aaa;" onclick="closeModals()">取消返回</button>
             </div>
         </div>
     </div>
+    
     <div class="modal-bg" id="confirmModal">
         <div class="modal-box">
             <h3 style="color: var(--cy-red); margin-bottom: 10px;">⚠️ 确认执行</h3>
@@ -931,6 +381,7 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
             </div>
         </div>
     </div>
+    
     <div class="modal-bg" id="manualDispatchModal">
         <div class="modal-box">
             <h3 style="color:var(--cy-yellow); margin-bottom: 5px;">自由派遣：指定下一场阵容</h3>
@@ -943,28 +394,20 @@ body { background-color: var(--cy-dark); background-image: radial-gradient(circl
 
     <script>
         const NEON_COLORS = ['#00f3ff', '#ff00ea', '#fcee0a', '#00ff66', '#ff2a2a', '#b026ff', '#ff7b00', '#00ffcc'];
-let defaultRules = { hh: 1, ll: 1, hl: 1, lh: 3, streakThreshold: 3, bounty: 2, reduced: 0.5, cleanBonus: 2, shutoutBonus: 2, streakBonusInc: 0.5, bountyInc: 1 };       
-let appData = {
-            roomId: "8888", timestamp: 0, // 修改点：永久固定房间号为 8888，初始时间设为0代表主动接收别人的新数据
-            rules: { ...defaultRules }, players: [], table: [], queue: [], matches: [],
-            currentMatchStartTime: null, dispatchMode: 'auto'
+        let appData = {
+            roomId: "8888", timestamp: 0, players: [], table: [], queue: [], matches: [], dispatchMode: 'auto'
         };
         let historyStack = []; let historyIndex = -1; let mqttClient = null; 
         let pendingWinContext = { index: -1, type: '' }; 
-        let detailSortBy = 'id'; let detailSortAsc = false;
 
-// ==============================================================================
-        // 【时光机轮次引擎】：根据所选日期，动态切割数据并重新推演当日的独立战绩！
-        // ==============================================================================
         let currentViewDate = 'ALL';
 
-function getFilteredData() {
+        function getFilteredData() {
             if(currentViewDate === 'ALL') return { matches: appData.matches, players: appData.players };
 
             let customSplits = appData.customSplits || [];
             let rawGroups = {};
             
-            // 先按日期粗略分组
             appData.matches.forEach((m, idx) => {
                 let d = new Date(m.ts);
                 let dateKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -973,13 +416,11 @@ function getFilteredData() {
             });
 
             let fMatches = [];
-            // 根据你的切割点(X值)，把每一天的数据再次切成 01, 02 这样的小块
             for (let dk in rawGroups) {
                 let matchesInDay = rawGroups[dk];
                 let subGroups = [];
                 let currentSub = [];
                 matchesInDay.forEach(item => {
-                    // 如果遇到了你的切割点局数，马上挥下剪刀切断！
                     if (customSplits.includes(item.absNum) && currentSub.length > 0) {
                         subGroups.push(currentSub);
                         currentSub = [];
@@ -992,18 +433,15 @@ function getFilteredData() {
                     if (currentViewDate === dk) fMatches = subGroups[0].map(x => x.match);
                 } else {
                     subGroups.forEach((sg, idx) => {
-                        let subKey = `${dk}#${idx+1}`; // 内部暗号：2026-05-18#1, 2026-05-18#2
+                        let subKey = `${dk}#${idx+1}`; 
                         if (currentViewDate === subKey) fMatches = sg.map(x => x.match);
                     });
                 }
             }
 
-            // 2. 复制所有玩家名单... (下方原来的代码保持不变！)
-
-            // 2. 复制所有玩家名单，并把当天的所有战绩统统归零！（也就是这轮的起点）
             let fPlayers = JSON.parse(JSON.stringify(appData.players));
             fPlayers.forEach(p => {
-                p.score = 0; p.wins = 0; p.losses = 0; p.streak = 0; p.totalScoreEarned = 0;
+                p.wins = 0; p.losses = 0; p.streak = 0;
                 p.maxWinStreak = 0; p.maxLoseStreak = 0; p.currentLoseStreak = 0;
                 p.normalWins = 0; p.foulWins = 0; p.cleanWins = 0; p.shutoutWins = 0;
                 p.bountyKills = 0; p.timesBounty = 0; p.upsetWins = 0; p.sameLevelWins = 0;
@@ -1011,29 +449,19 @@ function getFilteredData() {
 
             let pMap = {}; fPlayers.forEach(p => pMap[p.id] = p);
 
-            // 3. 像放电影一样，把当天的比赛重新推演一遍，计算当天的独立得分
             fMatches.forEach(m => {
                 let w = pMap[m.winner];
                 let lId = (m.p1 === m.winner) ? m.p2 : m.p1;
                 let l = pMap[lId];
                 if(!w || !l) return;
 
-                // 提取这一局的真实得分 (兼容老旧数据)
-                let pts = m.earnedPoints;
-                if(pts === undefined) {
-                    if(m.scoreFormula) { let match = m.scoreFormula.match(/>\s*(-?\d+(\.\d+)?)\s*分/); pts = match ? parseFloat(match[1]) : 1; } 
-                    else pts = 1;
-                }
-
-                // 累加计算这一轮的独立数据
-                w.score += pts; w.totalScoreEarned += pts;
                 w.wins++; w.streak++; w.currentLoseStreak = 0;
                 if(w.streak > w.maxWinStreak) w.maxWinStreak = w.streak;
                 if(m.type==='clean' || m.type==='clean_shutout') w.cleanWins++; 
-             if(m.type==='shutout' || m.type==='clean_shutout') w.shutoutWins++;
+                if(m.type==='shutout' || m.type==='clean_shutout') w.shutoutWins++;
                 if(m.type==='normal') w.normalWins++; if(m.type==='foul') w.foulWins++;
                 if(m.wTags && m.wTags.some(t=>t.includes('终结'))) w.bountyKills++;
-                if(w.streak === Number(appData.rules.streakThreshold)) w.timesBounty++;
+                if(w.streak === 3) w.timesBounty++;
                 if(w.level==='low' && l.level==='high') w.upsetWins++;
                 if(w.level === l.level) w.sameLevelWins++;
 
@@ -1044,16 +472,13 @@ function getFilteredData() {
             return { matches: fMatches, players: fPlayers };
         }
 
-        // 弹窗生成列表的逻辑
-function openRoundModal() {
+        function openRoundModal() {
             let tbody = document.getElementById('round-tbody');
             let tCount = appData.matches.length;
-            let fHms = (sec) => `${Math.floor(sec/3600)}:${Math.floor((sec%3600)/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
-            let totalDur = appData.matches.reduce((sum, m) => sum + (m.duration || 0), 0);
             
             let html = `<tr onclick="applyViewFilter('ALL')" style="cursor:pointer; background: ${currentViewDate === 'ALL' ? 'rgba(0,243,255,0.2)' : 'rgba(255,255,255,0.05)'};">
                 <td style="color:var(--cy-yellow); font-weight:bold;">全部总区间</td>
-                <td>1~${tCount}</td><td>${fHms(totalDur)}</td><td>${fHms(tCount>0?Math.floor(totalDur/tCount):0)}</td>
+                <td>1~${tCount}</td><td>${tCount}</td>
             </tr>`;
 
             let customSplits = appData.customSplits || [];
@@ -1081,22 +506,19 @@ function openRoundModal() {
                 if (subGroups.length === 1) {
                     finalGroups[dk] = { 
                         display: displayDateBase, 
-                        indices: subGroups[0].map(x=>x.absNum), 
-                        totalDur: subGroups[0].reduce((s,x)=>s+(x.match.duration||0), 0)
+                        indices: subGroups[0].map(x=>x.absNum)
                     };
                 } else {
                     subGroups.forEach((sg, idx) => {
                         let subKey = `${dk}#${idx+1}`;
-                        // 这里完美生成：260518-01, 260518-02
                         let subDisplay = `${displayDateBase}-${String(idx+1).padStart(2,'0')}`;
                         finalGroups[subKey] = {
-                            display: subDisplay, indices: sg.map(x=>x.absNum), totalDur: sg.reduce((s,x)=>s+(x.match.duration||0), 0)
+                            display: subDisplay, indices: sg.map(x=>x.absNum)
                         };
                     });
                 }
             }
 
-            // 按照最新的比赛局数，从上到下排列
             let sortedKeys = Object.keys(finalGroups).sort((a,b) => Math.min(...finalGroups[b].indices) - Math.min(...finalGroups[a].indices));
 
             sortedKeys.forEach(key => {
@@ -1106,7 +528,7 @@ function openRoundModal() {
                 let isSel = currentViewDate === key;
                 html += `<tr onclick="applyViewFilter('${key}')" style="cursor:pointer; background: ${isSel ? 'rgba(0,243,255,0.2)' : 'transparent'};">
                     <td style="color:${isSel ? 'var(--cy-cyan)' : '#fff'}; font-weight:bold;">${data.display}</td>
-                    <td>${range}</td><td>${fHms(data.totalDur)}</td><td>${fHms(count>0?Math.floor(data.totalDur/count):0)}</td>
+                    <td>${range}</td><td>${count}</td>
                 </tr>`;
             });
 
@@ -1114,8 +536,7 @@ function openRoundModal() {
             document.getElementById('roundModal').style.display = 'flex';
         }
 
-        // 切换视图的开关
-function applyViewFilter(dateKey) {
+        function applyViewFilter(dateKey) {
             currentViewDate = dateKey;
             document.getElementById('roundModal').style.display = 'none';
             let bar = document.getElementById('view-filter-bar');
@@ -1126,7 +547,6 @@ function applyViewFilter(dateKey) {
             } else {
                 bar.style.background = 'linear-gradient(90deg, #ff00ea, #00f3ff)';
                 let displayStr = dateKey;
-                // 解析带有切割点特征的内部暗号，渲染给用户看
                 if(dateKey.includes('#')) {
                     let parts = dateKey.split('#');
                     displayStr = `${parts[0].replace(/-/g, '').substring(2)}-${String(parts[1]).padStart(2,'0')}`;
@@ -1135,21 +555,10 @@ function applyViewFilter(dateKey) {
                 }
                 text.innerHTML = `📅 当前视图：🛑 独立轮次 [${displayStr}]`;
             }
-            updateAllUI(); // 触发页面全面刷新！
+            updateAllUI(); 
         }
 
-        setInterval(() => {
-            let timerEl = document.getElementById('match-timer-display'); let btnEl = document.getElementById('btn-start-timer');
-            if(appData.currentMatchStartTime) {
-                let s = Math.floor((Date.now() - appData.currentMatchStartTime)/1000);
-                timerEl.innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-                btnEl.innerText = "计时中..."; btnEl.style.background = "var(--cy-pink)";
-            } else { timerEl.innerText = "00:00"; btnEl.innerText = "开始计时"; btnEl.style.background = "var(--cy-cyan)"; }
-        }, 1000);
-
-function init() {
-
-// 修复3：开局自动装载本地的撤销历史库
+        function init() {
             let localStack = localStorage.getItem('poolHistoryStack');
             if(localStack) {
                 historyStack = JSON.parse(localStack);
@@ -1160,21 +569,13 @@ function init() {
             if(localData) {
                 try {
                     let parsed = JSON.parse(localData); 
-                    // 这里原本会读取旧记忆，把房间号搞乱
                     appData = { ...appData, ...parsed };
-                    
                     if(!appData.matches) appData.matches = [];
                     if(!appData.dispatchMode) appData.dispatchMode = 'auto';
-                    if(!appData.rules.cleanBonus) appData.rules.cleanBonus = 2;
-                    if(!appData.rules.shutoutBonus) appData.rules.shutoutBonus = 2;
-if(appData.rules.streakBonusInc === undefined) appData.rules.streakBonusInc = 0.5;
-                    if(appData.rules.bountyInc === undefined) appData.rules.bountyInc = 1;
                     appData.players.forEach(p => initPlayerStats(p));
                 } catch(e) {}
             }
             
-            // 🚨🚨🚨 核心终极修复点在这里！🚨🚨🚨
-            // 不管浏览器以前存的是 3503 还是 2501，在这里“一刀切”，六亲不认，强行全部绑死在 8888 房间！
             appData.roomId = "8888"; 
 
             if(appData.players.length === 0) {
@@ -1185,10 +586,7 @@ if(appData.rules.streakBonusInc === undefined) appData.rules.streakBonusInc = 0.
                 appData.table = [appData.players[0].id, appData.players[1].id]; appData.queue = [appData.players[2].id, appData.players[3].id];
             }
             
-            // 强行把左上角的 UI 文字也直接焊死显示 8888
             document.getElementById('ui-room-id').innerText = appData.roomId;
-            
-            // 启动网络并全服比对最新时间
             updateDispatchBtnUI(); saveStateToHistory(); connectMqtt(); updateAllUI();
         }
 
@@ -1200,16 +598,12 @@ if(appData.rules.streakBonusInc === undefined) appData.rules.streakBonusInc = 0.
             if(p.foulWins === undefined) p.foulWins = 0; if(p.cleanWins === undefined) p.cleanWins = 0; if(p.shutoutWins === undefined) p.shutoutWins = 0;
             if(p.bountyKills === undefined) p.bountyKills = 0; if(p.timesBounty === undefined) p.timesBounty = 0; 
             if(p.upsetWins === undefined) p.upsetWins = 0; if(p.sameLevelWins === undefined) p.sameLevelWins = 0; 
-            if(p.totalScoreEarned === undefined) p.totalScoreEarned = p.score || 0;
         }
 
-function saveStateToHistory() {
-            // 1. 裁切掉当前指针之后的所有未来分支（解决撤销后再打新局导致历史混乱的问题）
+        function saveStateToHistory() {
             if (historyIndex < historyStack.length - 1) {
                 historyStack = historyStack.slice(0, historyIndex + 1);
             }
-            
-            // 2. 剔除网络时间戳的影响，进行纯数据比对，防止产生无效的重复历史导致撤销卡死
             if (historyStack.length > 0) {
                 let curr = {...appData}; delete curr.timestamp;
                 let last = {...JSON.parse(historyStack[historyStack.length - 1])}; delete last.timestamp;
@@ -1219,7 +613,6 @@ function saveStateToHistory() {
             historyStack.push(JSON.stringify(appData)); 
             historyIndex++; 
             
-            // 3. 彻底解除紧箍咒：放宽到 1000 步！让你随便撤销，再也不会束手束脚！
             if(historyStack.length > 1000) { historyStack.shift(); historyIndex--; }
             localStorage.setItem('poolHistoryStack', JSON.stringify(historyStack));
             localStorage.setItem('poolHistoryIndex', historyIndex.toString());
@@ -1235,7 +628,6 @@ function saveStateToHistory() {
             appData = JSON.parse(historyStack[historyIndex]); 
             appData.timestamp = Date.now(); 
             saveLocalAndSync(); 
-            // 🔥 核心终极修复点：撤销和恢复时，必须同步把指针位置存进硬盘！否则一刷新网页它就会跳回以前的位置！
             localStorage.setItem('poolHistoryIndex', historyIndex.toString()); 
             updateAllUI(); 
             updateUndoRedoBtns(); 
@@ -1249,7 +641,6 @@ function saveStateToHistory() {
             if(appData.dispatchMode === 'auto') { btn.innerText = "当前模式：自动补位"; btn.style.borderColor = "var(--cy-cyan)"; btn.style.color = "var(--cy-cyan)"; } 
             else { btn.innerText = "当前模式：自由派遣"; btn.style.borderColor = "var(--cy-pink)"; btn.style.color = "var(--cy-pink)"; }
         }
-        function startTimer() { if(!appData.currentMatchStartTime) { appData.currentMatchStartTime = Date.now(); saveStateToHistory(); saveLocalAndSync(); } }
         function toggleRest(pid) { let p = getPlayer(pid); if(!p) return; p.status = p.status === 'resting' ? 'active' : 'resting'; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); }
 
         function startWinFlow(index) {
@@ -1259,11 +650,11 @@ function saveStateToHistory() {
         function openConfirmModal(type) {
             pendingWinContext.type = type; document.getElementById('winMethodModal').style.display = 'none';
             let winner = getPlayer(appData.table[pendingWinContext.index]);
-            let textMap = { 'normal': '凭实力正常获胜', 'clean': '一杆清台 (享附加分)', 'shutout': '剃光头 (享附加分)', 'clean_shutout': '一杆清台 + 剃光头 (拿双份附加分)', 'foul': '对手失误导致获胜' };
+            let textMap = { 'normal': '凭实力正常获胜', 'clean': '一杆清台', 'shutout': '剃光头', 'clean_shutout': '一杆清台 + 剃光头', 'foul': '对手失误导致获胜' };
             document.getElementById('confirm-msg').innerHTML = `判定 <b>${winner.name}</b> <br><span style="color:var(--cy-cyan);font-size:18px;">[ ${textMap[type]} ]</span>`;
             document.getElementById('confirmModal').style.display = 'flex';
         }
-function closeModals() { document.getElementById('winMethodModal').style.display = 'none'; document.getElementById('confirmModal').style.display = 'none'; document.getElementById('manualDispatchModal').style.display = 'none'; document.getElementById('subModal').style.display = 'none'; }
+        function closeModals() { document.getElementById('winMethodModal').style.display = 'none'; document.getElementById('confirmModal').style.display = 'none'; document.getElementById('manualDispatchModal').style.display = 'none'; document.getElementById('subModal').style.display = 'none'; }
 
         function executeWinLogic() {
             closeModals();
@@ -1271,89 +662,37 @@ function closeModals() { document.getElementById('winMethodModal').style.display
             let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]); if(!p1 || !p2) return;
             let winner = wIdx === 0 ? p1 : p2; let loser = wIdx === 0 ? p2 : p1;
 
-            let durationSec = appData.currentMatchStartTime ? Math.floor((Date.now() - appData.currentMatchStartTime)/1000) : 0;
-            appData.currentMatchStartTime = null; 
-
-// ==========================================
-            // 【核心修改】：精准计算每局得分，并生成“公式详情记录”
-            // ==========================================
-            let earnedPoints = 0;
-            let formulaBase = '';  // 基础部分文字
-            let formulaBonus = ''; // 附加奖励部分文字
-
-            // 1. 判断基础等级分
-            if(winner.level === 'high' && loser.level === 'high') { earnedPoints = Number(appData.rules.hh); formulaBase = `(高手赢高手) ${earnedPoints}`; winner.sameLevelWins++; }
-            else if(winner.level === 'low' && loser.level === 'low') { earnedPoints = Number(appData.rules.ll); formulaBase = `(低手赢低手) ${earnedPoints}`; winner.sameLevelWins++; }
-            else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = Number(appData.rules.hl); formulaBase = `(高手赢低手) ${earnedPoints}`; }
-            else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = Number(appData.rules.lh); formulaBase = `(低手爆冷高手) ${earnedPoints}`; winner.upsetWins++; }
-            
-// 2. 连胜递增系统 (完美契合逻辑：单局基础分 + 红名奖励基础分 + 连胜递增滚雪球)
-            if(winner.streak >= Number(appData.rules.streakThreshold)) {
-                let overStreak = winner.streak - Number(appData.rules.streakThreshold); 
-                let incX = Number(appData.rules.streakBonusInc) || 0; 
-                let redBonus = Number(appData.rules.reduced); // 这是红名后的奖励基础分
-                let streakInc = overStreak * incX; // 这是连胜递增分数
-                
-                // 毫无保留地全部相加！
-                earnedPoints += redBonus + streakInc; 
-                
-                // 将追加的奖励文字完美拼接到历史账单的公式中
-                formulaBonus += ` + (连胜基础奖励) ${redBonus}` + (streakInc > 0 ? ` + (连胜递增奖励) ${streakInc}` : '');
-            }
-            
-            // 3. 终结赏金递增系统
-            let isBountyKill = false;
-            if(loser.streak >= Number(appData.rules.streakThreshold)) {
-                let overStreak = loser.streak - Number(appData.rules.streakThreshold); 
-                let incY = Number(appData.rules.bountyInc) || 0; 
-                let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY); 
-                
-                earnedPoints += currentDynamicBounty; 
-                isBountyKill = true; 
-                winner.bountyKills++; 
-                formulaBonus += ` + (终结赏金) ${currentDynamicBounty}`;
-            }
-
-// 4. 附加特殊胜利方式加分 (支持双重加分判定)
             let isClean = (winType === 'clean' || winType === 'clean_shutout');
             let isShutout = (winType === 'shutout' || winType === 'clean_shutout');
 
-            if(isClean) { let cb = Number(appData.rules.cleanBonus); earnedPoints += cb; formulaBonus += ` + (一杆清台) ${cb}`; winner.cleanWins++; }
-            if(isShutout) { let sb = Number(appData.rules.shutoutBonus); earnedPoints += sb; formulaBonus += ` + (剃光头) ${sb}`; winner.shutoutWins++; }
+            let isBountyKill = false;
+            let threshold = 3;
+            if(loser.streak >= threshold) {
+                isBountyKill = true; 
+                winner.bountyKills++; 
+            }
 
-            // 5. 将文本组装成最终的精美 HTML 公式！
-            let scoreFormula = `${formulaBase}${formulaBonus} = <span style="color:var(--cy-yellow); font-size:15px; font-family:'Oswald', sans-serif;">${earnedPoints} 分</span>`;
-
-let wTags = []; let lTags = [];
+            let wTags = []; let lTags = [];
+            if(winner.wins === 0) { wTags.push('首胜'); } 
+            else if(winner.streak >= 1) { wTags.push(`连胜x${winner.streak + 1}`); }
             
-            // --- 胜者标签逻辑 ---
-            if(winner.wins === 0) {
-                wTags.push('首胜');
-            } else if(winner.streak >= 1) {
-                wTags.push(`连胜x${winner.streak + 1}`);
-            }
             if(isBountyKill) wTags.push('终结连胜');
-            if(isClean) wTags.push('一杆清台'); // 使用双重判定参数
-            if(isShutout) wTags.push('剃光头'); // 使用双重判定参数
+            if(isClean) wTags.push('一杆清台'); 
+            if(isShutout) wTags.push('剃光头'); 
 
-            // --- 败者标签逻辑 ---
-            if(loser.currentLoseStreak >= 1) {
-                lTags.push(`连败x${loser.currentLoseStreak + 1}`);
-            }
-            if(isShutout) lTags.push('被剃光头'); // 【新增】被剃头标签
-            if(winType === 'foul') lTags.push('自爆');       // 【新增】失误送局标签
+            if(loser.currentLoseStreak >= 1) { lTags.push(`连败x${loser.currentLoseStreak + 1}`); }
+            if(isShutout) lTags.push('被剃光头'); 
+            if(winType === 'foul') lTags.push('自爆');       
 
-            winner.score += earnedPoints; winner.totalScoreEarned += earnedPoints;
             winner.wins += 1; winner.streak += 1; winner.currentLoseStreak = 0;
             if(winner.streak > winner.maxWinStreak) winner.maxWinStreak = winner.streak;
-            if(winner.streak === appData.rules.streakThreshold) winner.timesBounty++;
             if(winType === 'normal') winner.normalWins++; else if(winType === 'foul') winner.foulWins++;
 
             loser.losses += 1; loser.streak = 0; loser.currentLoseStreak += 1;
             if(loser.currentLoseStreak > loser.maxLoseStreak) loser.maxLoseStreak = loser.currentLoseStreak;
 
-// 核心修改：不仅存公式，还要把算好的 earnedPoints (实际得分) 存起来，作为日后轮次推演的绝对依据！
-            appData.matches.push({ p1: p1.id, p2: p2.id, winner: winner.id, type: winType, duration: durationSec, ts: Date.now(), wTags, lTags, scoreFormula: scoreFormula, earnedPoints: earnedPoints });
+            appData.matches.push({ p1: p1.id, p2: p2.id, winner: winner.id, type: winType, ts: Date.now(), wTags, lTags });
+            
             if(appData.dispatchMode === 'auto') {
                 let newTable = []; appData.queue.push(loser.id);
                 if(winner.status === 'active') { newTable.push(winner.id); } else { appData.queue.push(winner.id); } 
@@ -1383,155 +722,25 @@ let wTags = []; let lTags = [];
             closeModals(); saveStateToHistory(); saveLocalAndSync(); updateAllUI();
         }
 
-function updateAllUI() { 
+        function updateAllUI() { 
             let backupPlayers = appData.players;
             let backupMatches = appData.matches;
             
-            // 🚨 修复Bug核心：【核心赛场】永远是控制台，必须使用当下最真实的绝对数据进行渲染！不参与时光机回溯！
             renderPlayArea(); 
             
-            // 魔法：临时把真数据调包成“轮次独立数据”，交给后面的风云榜、荣誉殿堂去渲染历史战绩！
             let filtered = getFilteredData();
             appData.players = filtered.players;
             appData.matches = filtered.matches;
             
-            renderStats(); 
-            renderChart(); 
-            renderAchievements(); 
             renderH2H(); 
             renderMatchDetails(); 
             
-            // 渲染完毕后，立刻把硬盘里的真实数据还回去，绝不破坏历史系统！
             appData.players = backupPlayers;
             appData.matches = backupMatches;
             
             renderSettings(); 
         }
 
-// ==========================================
-        // 【核心代码】：自动推演历史得分并绘制赛博曲线图
-        // ==========================================
-function renderChart() {
-            // 护盾：因为延迟加载，必须主动调用引擎模拟一次数据
-            let backupPlayers = appData.players; let backupMatches = appData.matches;
-            let filtered = getFilteredData(); 
-            appData.players = filtered.players; appData.matches = filtered.matches;
-            let restore = () => { appData.players = backupPlayers; appData.matches = backupMatches; };
-
-            let container = document.getElementById('chart-render-area');
-            if(!container) return restore();
-            
-            // 如果这个轮次下一局都没打过，画不出来
-            if(appData.matches.length === 0) {
-                container.innerHTML = '<div style="text-align:center;color:#666;line-height:380px;">当前轮次暂无数据，上桌打一局再来看吧！</div>';
-                return restore();
-            }
-
-            // 1. 量屏幕大小
-            let w = container.clientWidth; let h = container.clientHeight;
-            if(w === 0) return restore();
-
-            // 2. 预留边缘防撞垫 (防止头像被切掉)
-            let padX = 40; let padTop = 40; let padBot = 40;
-
-            let maxMatch = appData.matches.length;
-            let maxScore = Math.max(...appData.players.map(p => p.score), 10); 
-            let minScore = Math.min(...appData.players.map(p => p.score - (p.totalScoreEarned || 0)), 0); 
-            // 顶部留一点空隙，让分数最高的人不至于贴顶
-            maxScore = maxScore + (maxScore - minScore) * 0.1;
-
-            // 坐标系转换公式：把第几局转换成像素X，把分数转换成像素Y
-            let getX = (idx) => padX + (idx / maxMatch) * (w - padX * 2);
-            let getY = (pts) => h - padBot - ((pts - minScore) / (maxScore - minScore)) * (h - padTop - padBot);
-
-            // 3. 开始写 SVG (一种极其强大的矢量画图代码)
-            let svgHtml = `<svg width="${w}" height="${h}" style="position:absolute; top:0; left:0; overflow:visible;">`;
-            let avatarsHtml = '';
-
-// ==========================================
-            // 【核心修改】：绘制带有分数和局数刻度的科技网格
-            // ==========================================
-            // 1. 绘制 Y轴 (分数刻度)
-            let yLines = [minScore, (minScore + maxScore) / 2, maxScore];
-            yLines.forEach(score => {
-                let yPos = getY(score);
-                // 画横向虚线
-                svgHtml += `<line x1="${padX}" y1="${yPos}" x2="${w-padX}" y2="${yPos}" stroke="#333" stroke-width="1" stroke-dasharray="4" />`;
-                // 写上分数文字 (位于横线左侧)
-                svgHtml += `<text x="${padX - 6}" y="${yPos + 4}" fill="#888" font-size="10" font-weight="bold" font-family="'Oswald', sans-serif" text-anchor="end">${Math.round(score)}分</text>`;
-            });
-
-            // 2. 绘制 X轴 (局数刻度)
-            // 智能计算间距，最多显示6个刻度，防止局数太多时文字挤成一坨
-            let step = Math.max(1, Math.ceil(maxMatch / 6)); 
-            for(let i = 0; i <= maxMatch; i += step) {
-                let xPos = getX(i);
-                // 画竖向参考线
-                svgHtml += `<line x1="${xPos}" y1="${padTop}" x2="${xPos}" y2="${h-padBot}" stroke="#222" stroke-width="1" stroke-dasharray="2" />`;
-                // 写上局数文字 (位于竖线正下方)
-                svgHtml += `<text x="${xPos}" y="${h - padBot + 18}" fill="#888" font-size="10" font-weight="bold" font-family="'Noto Sans SC', sans-serif" text-anchor="middle">第${i}局</text>`;
-            }
-            // 确保最后一局(最新一局)一定有刻度显示，并且用青色高亮！
-            if(maxMatch % step !== 0) {
-                let xPos = getX(maxMatch);
-                svgHtml += `<text x="${xPos}" y="${h - padBot + 18}" fill="var(--cy-cyan)" font-size="10" font-weight="bold" font-family="'Noto Sans SC', sans-serif" text-anchor="middle">第${maxMatch}局</text>`;
-            }
-
-            // 4. 为每个玩家推演他的分数轨迹
-            appData.players.forEach(p => {
-                let pWins = p.wins || 1; // 避免除0崩溃
-                let avgEarned = (p.totalScoreEarned || 0) / pWins; // 算出他赢一局平均得几分
-                let currentPts = p.score - (p.totalScoreEarned || 0); // 反推出他的起始分数
-
-                let pointsStr = `${getX(0)},${getY(currentPts)} `; // 第0个点坐标
-                let lastX = getX(0); let lastY = getY(currentPts);
-
-                // 根据历史对战，一局一局加分模拟
-                appData.matches.forEach((m, i) => {
-                    if(m.winner === p.id) currentPts += avgEarned;
-                    lastX = getX(i + 1);
-                    lastY = getY(currentPts);
-                    pointsStr += `${lastX},${lastY} `; // 连线
-                });
-
-                // 画出这条赛博发光折线
-                svgHtml += `<polyline points="${pointsStr}" fill="none" stroke="${p.color}" stroke-width="3" style="filter: drop-shadow(0 0 8px ${p.color});" />`;
-
-                // 5. 在曲线的最后端，打上他的专属照相框！
-                avatarsHtml += `
-                    <div class="chart-avatar-frame" style="
-                        position: absolute; 
-                        left: ${lastX}px; 
-                        top: ${lastY}px; 
-                        transform: translate(-50%, -50%); 
-                        border-color: ${p.color}; 
-                        box-shadow: 0 0 15px ${p.color};
-                        z-index: 10;
-                    ">
-                        <img src="${p.avatar}">
-                    </div>
-                    <!-- 头像上方悬浮最新总分 -->
-                    <div style="
-                        position: absolute;
-                        left: ${lastX}px;
-                        top: ${lastY - 32}px;
-                        transform: translate(-50%, -50%);
-                        color: #fff;
-                        font-size: 14px;
-                        font-family: 'Oswald', sans-serif;
-                        font-weight: 900;
-                        text-shadow: 0 2px 5px #000, 0 0 10px ${p.color};
-                        z-index: 11;
-                    ">${Math.round(p.score)}</div>
-                `;
-            });
-
-            svgHtml += `</svg>`;
-container.innerHTML = svgHtml + avatarsHtml;
-            restore(); // 画完必须恢复真实数据！
-        }
-
-// 记录正在操作换人的上下文
         let pendingSubContext = { tableIndex: -1, oldPlayerId: '' };
 
         function openSubModal(pid, tableIndex) {
@@ -1540,7 +749,6 @@ container.innerHTML = svgHtml + avatarsHtml;
             pendingSubContext = { tableIndex: tableIndex, oldPlayerId: pid };
             document.getElementById('sub-old-name').innerText = p.name;
             
-            // 找出在队列中，且状态不是 resting 的玩家
             let availablePlayers = appData.queue.filter(id => {
                 let qp = getPlayer(id);
                 return qp && qp.status === 'active';
@@ -1553,7 +761,6 @@ container.innerHTML = svgHtml + avatarsHtml;
 
             let opts = availablePlayers.map(id => {
                 let qp = getPlayer(id);
-                // 提示该玩家当前的连胜状态
                 let streakText = qp.streak > 0 ? ` (当前连胜:${qp.streak})` : '';
                 return `<option value="${id}">${qp.name}${streakText}</option>`;
             }).join('');
@@ -1569,18 +776,11 @@ container.innerHTML = svgHtml + avatarsHtml;
             
             if(!newId) return closeModals();
 
-            // 1. 把新玩家从 queue 里拿出来
             appData.queue = appData.queue.filter(id => id !== newId);
-            // 2. 把老玩家放进 queue 里
             appData.queue.push(oldId);
-            // 3. 在桌子上进行替换
             appData.table[idx] = newId;
 
-            // 保存并刷新
-            saveStateToHistory(); 
-            saveLocalAndSync(); 
-            updateAllUI(); 
-            closeModals();
+            saveStateToHistory(); saveLocalAndSync(); updateAllUI(); closeModals();
         }
 
         function renderPlayArea() {
@@ -1591,63 +791,11 @@ container.innerHTML = svgHtml + avatarsHtml;
             let p1 = getPlayer(appData.table[0]); let p2 = getPlayer(appData.table[1]);
 
             let buildCard = (p, index, opp) => {
-                let threshold = Number(appData.rules.streakThreshold);
+                let threshold = 3;
                 let isStreak = p.streak >= threshold;
-                
-                let expectedPts = 0;
-                // 我们不再用普通数组装字符串，而是用对象装配数据，以便后面生成独立标签
-                let detailArr = []; 
-                
-                // 1. 基础得分
-                let basePts = 0;
-                if(p.level === 'high' && opp.level === 'high') basePts = Number(appData.rules.hh);
-                else if(p.level === 'low' && opp.level === 'low') basePts = Number(appData.rules.ll);
-                else if(p.level === 'high' && opp.level === 'low') basePts = Number(appData.rules.hl);
-                else if(p.level === 'low' && opp.level === 'high') basePts = Number(appData.rules.lh);
-                
-                expectedPts += basePts;
-                detailArr.push({ label: '基础得分', val: `+${basePts}`, type: 'base' });
-
-                // 2. 连胜奖励系统
-                if(p.streak >= threshold) {
-                    let overS = p.streak - threshold;
-                    let incX = Number(appData.rules.streakBonusInc) || 0;
-                    let streakIncTotal = overS * incX; 
-                    let redBonus = Number(appData.rules.reduced); 
-                    
-                    expectedPts += redBonus + streakIncTotal; 
-                    
-                    detailArr.push({ label: '连胜基础奖励', val: `+${redBonus}`, type: 'red' });
-                    if(streakIncTotal > 0) detailArr.push({ label: '连胜递增奖励', val: `+${streakIncTotal}`, type: 'streak' });
-                }
-                
-                // 3. 终结对手赏金
-                if(opp.streak >= threshold) {
-                    let overS = opp.streak - threshold;
-                    let incY = Number(appData.rules.bountyInc) || 0;
-                    let baseBounty = Number(appData.rules.bounty);
-                    let bountyTotalInc = overS * incY; 
-                    
-                    expectedPts += baseBounty + bountyTotalInc;
-                    
-                    detailArr.push({ label: '终结连胜基础奖励', val: `+${baseBounty}`, type: 'bounty' });
-                    if(bountyTotalInc > 0) detailArr.push({ label: '终结连胜递增赏金', val: `+${bountyTotalInc}`, type: 'bounty-inc' });
-                }
-                
-                // 【核心修改】：生成一行一行的独立悬浮标签！没有黑框！
-                let finalDetailText = `<div class="cyber-tag-container">` + 
-                    detailArr.map(item => `
-                        <div class="cyber-tag-row type-${item.type}">
-                            <div class="tag-label">${item.label}</div>
-                            <div class="tag-value">${item.val}</div>
-                        </div>
-                    `).join("") + 
-                `</div>`;
-
                 let outerClass = 'static-neon-glow'; 
                 let outerStyle = `--glow-color: ${p.color};`; 
                 let streakLabelHtml = '';
-                let bountyHtml = ''; 
                 
                 if (isStreak) {
                     let overStreak = p.streak - threshold; 
@@ -1657,90 +805,38 @@ container.innerHTML = svgHtml + avatarsHtml;
                     outerStyle = ''; 
                     
                     streakLabelHtml = `<div class="streak-label text-fire-breathe" style="background: linear-gradient(90deg, #cc2b5e, #753a88); color: white; border-bottom: 2px solid #fff; box-shadow: 0 2px 10px #ff0000;">🔥 连胜 ${p.streak} 局</div>`;
-                    
-                    let incY = Number(appData.rules.bountyInc) || 0;
-                    let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY);
-                    bountyHtml = `<div class="bounty-tag">💰 终结奖金：${currentDynamicBounty} 分</div>`;
                 }
 
-// ==================================================
-                // 【此处是 V2 版本的全新卡牌 HTML 生成结构】
-                // 1比1 复刻图2：照片作为全屏底图，文字悬浮在上，名字置于外侧底部
-                // ==================================================
                 return `
                     <div style="display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%;">
-                        
-                        <!-- 主卡片区域 (包含了背景图、黑渐变、和所有得分信息) -->
                         <div class="combatant-outer ${outerClass}" style="${outerStyle}; position: relative; border-radius: 12px; overflow: hidden; width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-height: 500px;">
                             
-                            <!-- 1. 绝对定位的全屏背景图 (被设在最底层 z-index: 0) -->
                             <div class="c-img-wrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
                                 <img src="${p.avatar}" style="width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%;">
                             </div>
 
-                            <!-- 2. 底部黑色渐变遮罩 (让文字能清晰可见，图2必备) -->
                             <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0.95) 100%); z-index: 1; pointer-events: none;"></div>
 
-                            <!-- 3. 前景内容区 (悬浮在图片和遮罩上方 z-index: 2) -->
                             <div style="position: relative; z-index: 2; padding: 12px 15px; display: flex; flex-direction: column; align-items: center; width: 100%;">
-                                
-                                <!-- 赏金标签 (只在红名时显示) -->
-                                ${bountyHtml ? `<div style="margin-bottom: 12px; z-index:3;">${bountyHtml}</div>` : ''}
-
-                                <!-- 独立悬浮得分胶囊 (对应图2的基础得分、红名分等) -->
-                                ${finalDetailText}
-                                
-                                <!-- 底部总分黑框展示区 -->
-                                <div class="v2-expected-box">
-                                    胜局可得 <span class="v2-expected-num">+${expectedPts}</span>
-                                </div>
-                                
-                                <!-- 判定胜利大蓝按钮 -->
                                 <button class="v2-win-btn" onclick="startWinFlow(${index})">判定胜利</button>
                             </div>
 
-                            <!-- 顶部的连胜特效横条 (绝对定位在卡片顶部) -->
                             ${streakLabelHtml}
                         </div>
 
-                        <!-- 4. 卡片外部：独立的名字与轮换标签 (对应图2最底部的 汤必达🔄) -->
                         <div class="v2-external-name" onclick="openSubModal('${p.id}', ${index})">
                             <span class="v2-name-text">${p.name}</span>
                             <div class="v2-refresh-icon">
-                                <!-- 手绘的精准刷新 SVG 矢量小图标 -->
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-8.31l5.67-5.67"/>
                                 </svg>
                             </div>
                         </div>
-
                     </div>`;
             };
 
             container.innerHTML = `<div class="battle-arena" style="height:auto; min-height:480px;">${buildCard(p1, 0, p2)}<div class="vs-center"><div class="vs-text">VS</div></div>${buildCard(p2, 1, p1)}</div>`;
-// --- 新增：自动读取并渲染规则讲解区 ---
-            document.getElementById('rules-panel-container').innerHTML = `
-                <div style="font-size:13px; font-weight:900; color:var(--cy-cyan); margin-bottom:8px; text-shadow:0 0 5px rgba(0,243,255,0.4);">📜 战局积分规则</div>
-                <div style="display:flex; flex-direction:column; gap:6px; font-size:11px; font-weight:bold; color:#ccc;">
-                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid #fff;">
-                        基础分：同级 <span style="color:#fff;">${appData.rules.hh} 分</span> &nbsp;|&nbsp; 
-                        高赢低 <span style="color:#fff;">${appData.rules.hl} 分</span> &nbsp;|&nbsp; 
-                        低赢高 <span style="color:var(--cy-red);">${appData.rules.lh} 分</span>
-                    </div>
-                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid #ff7b00;">
-                        连胜基础奖励：<span style="color:#ff7b00;">${appData.rules.reduced} 分</span> &nbsp;|&nbsp; 
-                        每多连胜一局递增：<span style="color:#ff7b00;">${appData.rules.streakBonusInc} 分</span>
-                    </div>
-                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid var(--cy-red);">
-                        终结连胜基础奖励：<span style="color:var(--cy-red);">${appData.rules.bounty} 分</span> &nbsp;|&nbsp; 
-                        终结每多连胜递增：<span style="color:var(--cy-red);">${appData.rules.bountyInc} 分</span>
-                    </div>
-                    <div style="background:rgba(0,0,0,0.4); padding:5px 8px; border-radius:4px; border-left:2px solid var(--cy-yellow);">
-                        一杆清台：<span style="color:var(--cy-yellow);">${appData.rules.cleanBonus} 分</span> &nbsp;|&nbsp; 
-                        剃光头：<span style="color:var(--cy-yellow);">${appData.rules.shutoutBonus} 分</span>
-                    </div>
-                </div>
-            `;
+
             document.getElementById('queue-list').innerHTML = appData.queue.map(id => {
                 let p = getPlayer(id); if(!p) return ''; let isResting = p.status === 'resting';
                 return `<div class="q-item ${isResting ? 'is-resting' : ''}">
@@ -1751,229 +847,29 @@ container.innerHTML = svgHtml + avatarsHtml;
             }).join('');
         }
 
-function renderStats() {
-            let container = document.getElementById('stats-list');
-            let sorted = [...appData.players].sort((a, b) => b.score - a.score);
-            let fTime = (s) => isNaN(s) || s === 0 ? '--' : `${Math.floor(s/60)}分${s%60}秒`;
-
-            container.innerHTML = sorted.map((p, index) => {
-let total = p.wins + p.losses; 
-                let rate = total > 0 ? Math.round((p.wins / total) * 100) : 0;
-                let loseRate = total > 0 ? 100 - rate : 0; // 新增：负局百分比
-
-                // 新增：主动胜利与躺赢百分比计算
-                let activeWins = p.wins - (p.foulWins || 0); // 总胜局减去对手自爆，就是主动胜利
-                let activePct = p.wins > 0 ? Math.round((activeWins / p.wins) * 100) : 0;
-                let foulPct = p.wins > 0 ? 100 - activePct : 0; 
-
-                let playerMatches = appData.matches.filter(m => m.p1 === p.id || m.p2 === p.id);
-                let totalSec = playerMatches.reduce((sum, m) => sum + (m.duration || 0), 0);
-                let avgSec = total > 0 ? Math.floor(totalSec / total) : 0;
-
-                // 新增：遍历出最长一局、最短一局、单局赢取最高分
-                let maxMatchTime = 0;
-                let minMatchTime = Infinity;
-                let maxSingleScore = 0;
-
-                playerMatches.forEach(m => {
-                    if (m.duration > maxMatchTime) maxMatchTime = m.duration;
-                    if (m.duration > 0 && m.duration < minMatchTime) minMatchTime = m.duration;
-                    if (m.winner === p.id) { // 只有自己赢的局才算赢取最高分
-                        let earned = m.earnedPoints || 0;
-                        if (earned > maxSingleScore) maxSingleScore = earned;
-                    }
-                });
-                if (minMatchTime === Infinity) minMatchTime = 0;
-
-                let isLast = index === sorted.length - 1 && sorted.length > 1; 
-                let isFirst = index === 0 && sorted.length > 1;
-                let numColor = "var(--cy-green)"; if(isFirst) numColor = "var(--cy-yellow)"; if(isLast) numColor = "var(--cy-red)";
-                
-                return `
-                    <div class="rank-card-outer">
-                        <div class="rank-inner" style="border: 2px solid ${p.color}; box-shadow: 0 0 10px ${p.color}; border-radius: 6px;">
-                            <!-- 核心修改：套上防溢出相框 -->
-                            <div class="rank-left" style="border-right: 2px solid ${p.color};">
-                                <div class="rank-num" style="color: ${numColor};">${index + 1}</div>
-                                <img src="${p.avatar}" style="${p.status==='resting'?'filter:grayscale(100%);':''}">
-                            </div>
-                            <div class="rank-right">
-                                <div class="rank-header"><div class="rank-name-box">${p.name} <span style="font-size:10px;color:#aaa;">[${p.level==='high'?'高手':'进阶'}]</span></div><div class="rank-score-box">${p.score}分</div></div>
-<!-- ================================================================================
-                                     【控制台 25：战绩风云榜 UI极致还原区 (像素级复刻图1)】
-                                     通过 buildV2Card 引擎生成：自动按图1分配左侧标题颜色、白色数据、对应颜色的百分比！
-                                     
-                                     [色值对照表 (如果想微调可以直接改这里)]：
-                                     胜局: #8ee55f (护眼绿)    负局: #fb3b3b (警示红)
-                                     主动: #54ebf7 (赛博青)    躺赢: #d35af6 (荧光紫)
-                                     连胜: #fc15f8 (粉红)      连败: #ffffff (纯白)
-                                     最长: #fd9b27 (橙黄)      最短: #7ff5d8 (薄荷绿)
-                                     上场: #ffde26 (金黄)      场均: #ffde26 (金黄)
-                                ================================================================================ -->
-                                <div class="rank-details-grid">
-                                    ${(() => {
-                                        // 核心制造机：自动生成左侧对齐、带竖线、双色文本的卡牌
-                                        let buildV2Card = (lbl, val, color, pct = '') => `
-                                            <div class="stat-badge-v2">
-                                                <div class="s-label" style="color:${color};">${lbl}</div>
-                                                <div class="s-divider"></div>
-                                                <div class="s-value">${val}${pct !== '' ? ` <span style="color:${color};">(${pct}%)</span>` : ''}</div>
-                                            </div>
-                                        `;
-                                        
-                                        // 严格按照图1的顺序和颜色排列！
-                                        return `
-                                            ${buildV2Card('胜局', p.wins, '#8ee55f', rate)}
-                                            ${buildV2Card('负局', p.losses, '#fb3b3b', loseRate)}
-                                            
-                                            ${buildV2Card('清台胜利', activeWins, '#54ebf7', activePct)}
-                                            ${buildV2Card('对手失误', p.foulWins, '#d35af6', foulPct)}
-                                            
-                                            ${buildV2Card('最高连胜', p.maxWinStreak, '#fc15f8')}
-                                            ${buildV2Card('最高连败', p.maxLoseStreak, '#ffffff')}
-                                            
-                                            ${buildV2Card('最长一局', fTime(maxMatchTime), '#fd9b27')}
-                                            ${buildV2Card('最短一局', fTime(minMatchTime), '#7ff5d8')}
-                                            
-                                            ${buildV2Card('总上场', fTime(totalSec), '#ffde26')}
-                                            ${buildV2Card('场平均', fTime(avgSec), '#ffde26')}
-                                        `;
-                                    })()}
-                                    
-                                    <!-- 跨两列的全宽特殊显示：单局最高赢取 (保留历史需求，使其完美融入新环境) -->
-                                    <div class="stat-badge-full">
-                                        <div style="color:var(--cy-yellow); font-size:12px; font-weight:bold; margin-right:8px;">👑 单局最高赢取</div>
-                                        <div style="width:1px; height:12px; background:rgba(255,255,255,0.3); margin-right:10px;"></div>
-                                        <div style="color:#fff; font-family:'Oswald'; font-size:15px; font-weight:900;">${maxSingleScore} <span style="font-size:12px; font-weight:bold;">分</span></div>
-                                    </div>
-                                </div>
-                        </div>
-                    </div>`;
-            }).join('');
-
-            let dEl = document.getElementById('last-match-date');
-            if(appData.matches.length > 0) {
-                let d = new Date(appData.matches[appData.matches.length - 1].ts);
-                dEl.innerText = `截止日期: ${d.getFullYear()}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`;
-            } else { dEl.innerText = "截止日期: 暂无对战数据"; }
-        }
-
-        // --- 荣誉殿堂 ---
-        function renderAchievements() {
-            let c = document.getElementById('achieve-list');
-            let ps = appData.players.filter(p => (p.wins + p.losses) > 0);
-            let p5 = ps.filter(p => (p.wins + p.losses) >= 5);
-            let validMatches = appData.matches.filter(m => m.duration > 0);
-
-            let sortV = (arr, fn) => [...arr].sort(fn)[0] || null;
-            let checkZ = (p, val) => (p && val > 0) ? p : null;
-
-            let a1 = checkZ(sortV(ps, (a,b)=>b.maxWinStreak - a.maxWinStreak), ps.length ? sortV(ps, (a,b)=>b.maxWinStreak - a.maxWinStreak).maxWinStreak : 0);
-            let a2 = checkZ(sortV(ps, (a,b)=>b.maxLoseStreak - a.maxLoseStreak), ps.length ? sortV(ps, (a,b)=>b.maxLoseStreak - a.maxLoseStreak).maxLoseStreak : 0);
-            let a3 = validMatches.length ? getPlayer(sortV(validMatches, (a,b)=>a.duration - b.duration).winner) : null; let a3v = validMatches.length ? sortV(validMatches, (a,b)=>a.duration - b.duration).duration : 0;
-            let a4 = validMatches.length ? getPlayer(sortV(validMatches, (a,b)=>b.duration - a.duration).winner) : null; let a4v = validMatches.length ? sortV(validMatches, (a,b)=>b.duration - a.duration).duration : 0;
-            let a5 = checkZ(sortV(ps, (a,b)=>b.bountyKills - a.bountyKills), ps.length ? sortV(ps, (a,b)=>b.bountyKills - a.bountyKills).bountyKills : 0);
-            let a6 = checkZ(sortV(ps, (a,b)=>b.foulWins - a.foulWins), ps.length ? sortV(ps, (a,b)=>b.foulWins - a.foulWins).foulWins : 0);
-            let a7 = checkZ(sortV(ps, (a,b)=>b.cleanWins - a.cleanWins), ps.length ? sortV(ps, (a,b)=>b.cleanWins - a.cleanWins).cleanWins : 0);
-            let a8 = checkZ(sortV(ps, (a,b)=>b.shutoutWins - a.shutoutWins), ps.length ? sortV(ps, (a,b)=>b.shutoutWins - a.shutoutWins).shutoutWins : 0);
-            let a9 = checkZ(sortV(ps, (a,b)=>b.sameLevelWins - a.sameLevelWins), ps.length ? sortV(ps, (a,b)=>b.sameLevelWins - a.sameLevelWins).sameLevelWins : 0);
-            let a10 = checkZ(sortV(ps, (a,b)=>b.upsetWins - a.upsetWins), ps.length ? sortV(ps, (a,b)=>b.upsetWins - a.upsetWins).upsetWins : 0);
-            let a11 = p5.length ? sortV(p5, (a,b)=>(b.wins/(b.wins+b.losses)) - (a.wins/(a.wins+a.losses))) : null;
-            let a12 = p5.length ? sortV(p5, (a,b)=>(a.wins/(a.wins+a.losses)) - (b.wins/(b.wins+b.losses))) : null;
-            let a13 = checkZ(sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)), ps.length ? (sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)).wins + sortV(ps, (a,b)=>(b.wins+b.losses)-(a.wins+a.losses)).losses) : 0);
-            let a14 = checkZ(sortV(ps, (a,b)=>b.totalScoreEarned - a.totalScoreEarned), ps.length ? sortV(ps, (a,b)=>b.totalScoreEarned - a.totalScoreEarned).totalScoreEarned : 0);
-            let a15 = checkZ(sortV(ps, (a,b)=>b.losses - a.losses), ps.length ? sortV(ps, (a,b)=>b.losses - a.losses).losses : 0);
-            let a16 = checkZ(sortV(ps, (a,b)=>b.timesBounty - a.timesBounty), ps.length ? sortV(ps, (a,b)=>b.timesBounty - a.timesBounty).timesBounty : 0);
-            let a17 = checkZ(sortV(ps, (a,b)=>b.normalWins - a.normalWins), ps.length ? sortV(ps, (a,b)=>b.normalWins - a.normalWins).normalWins : 0);
-
-            let avgArr = ps.map(p => {
-                let mw = validMatches.filter(m => m.winner === p.id);
-                if(mw.length < 3) return { p:p, avg: 0 };
-                let sum = mw.reduce((acc, cur) => acc + cur.duration, 0);
-                return { p:p, avg: Math.floor(sum/mw.length) };
-            }).filter(x => x.avg > 0);
-            let a18 = avgArr.length ? sortV(avgArr, (a,b)=>a.avg - b.avg).p : null; let a18v = avgArr.length ? sortV(avgArr, (a,b)=>a.avg - b.avg).avg : 0;
-            let a19 = avgArr.length ? sortV(avgArr, (a,b)=>b.avg - a.avg).p : null; let a19v = avgArr.length ? sortV(avgArr, (a,b)=>b.avg - a.avg).avg : 0;
-            
-            let h2hMap = {}; appData.matches.forEach(m => { let k = m.winner + '_' + (m.winner===m.p1?m.p2:m.p1); h2hMap[k]=(h2hMap[k]||0)+1; });
-            let hMaxK = Object.keys(h2hMap).sort((a,b)=>h2hMap[b]-h2hMap[a])[0];
-            let a20 = (hMaxK && h2hMap[hMaxK]>1) ? getPlayer(hMaxK.split('_')[0]) : null; let a20v = hMaxK ? h2hMap[hMaxK] : 0;
-
-            let buildA = (icon, title, desc, p, val) => {
-                let achieved = p != null;
-                // 取消了呼吸灯动画，全部使用静态玩家边框
-                let bClass = achieved ? 'static-neon-glow' : 'achieve-disabled';
-                let cStyle = achieved ? `style="--glow-color: ${p.color};"` : '';
-                return `
-                    <div class="ach-card-outer ${bClass}" ${cStyle}>
-                        <div class="ach-card">
-                            <div class="ach-left-icon">${icon}</div>
-                            <div class="ach-mid-info">
-                                <div class="ach-title">${title} <span class="ach-val">${achieved ? val : '未达成'}</span></div>
-                                <div class="ach-player">${achieved ? p.name : '---'}</div>
-                                <div class="ach-desc">${desc}</div>
-                            </div>
-                            <div class="ach-right-avatar"><img src="${achieved ? p.avatar : ''}"></div>
-                        </div>
-                    </div>`;
-            };
-
-            let fTime = (s) => `${Math.floor(s/60)}分${s%60}秒`;
-            
-            let html = '';
-            html += buildA('🔥', '独孤求败', '历史最高连胜纪录的霸主。', a1, a1?a1.maxWinStreak+' 局':'');
-            html += buildA('🥶', '天选非酋', '连败场次最多，屡败屡战！', a2, a2?a2.maxLoseStreak+' 局':'');
-            html += buildA('⚡', '闪电战王', '单局耗时极短，速战速决。', a3, a3?fTime(a3v):'');
-            html += buildA('⏳', '膀胱局大师', '单局最长鏖战，磨人心智。', a4, a4?fTime(a4v):'');
-            html += buildA('🎱', '一杆清台王', '直接清台不给对手留机会。', a7, a7?a7.cleanWins+' 次':'');
-            html += buildA('💀', '剃光头魔王', '把对手打得一颗球没进。', a8, a8?a8.shutoutWins+' 次':'');
-            html += buildA('🎯', '赏金猎人', '击杀悬赏红名次数最多。', a5, a5?a5.bountyKills+' 次':'');
-            html += buildA('🎁', '躺赢锦鲤', '靠对手犯规白球同落获胜。', a6, a6?a6.foulWins+' 次':'');
-            html += buildA('⚔️', '内卷之王', '最喜欢在同级别中称霸。', a9, a9?a9.sameLevelWins+' 次':'');
-            html += buildA('🚀', '以下克上', '爆冷干掉高手次数最多。', a10, a10?a10.upsetWins+' 次':'');
-            html += buildA('👑', '常胜将军', '整体胜率最高 (满5局起)。', a11, a11?Math.round(a11.wins/(a11.wins+a11.losses)*100)+'%':'');
-            html += buildA('💸', '散财童子', '整体胜率最低 (满5局起)。', a12, a12?Math.round(a12.wins/(a12.wins+a12.losses)*100)+'%':'');
-            html += buildA('🛠️', '台球劳模', '参与比赛的总局数最多。', a13, a13?(a13.wins+a13.losses)+' 局':'');
-            html += buildA('💰', '得分机器', '累积赚取的绝对积分最多。', a14, a14?a14.totalScoreEarned+' 分':'');
-            html += buildA('🕊️', '和平使者', '输掉的局数最多，善待他人。', a15, a15?a15.losses+' 局':'');
-            html += buildA('👹', '红名常客', '打出连胜被全场针对最多。', a16, a16?a16.timesBounty+' 次':'');
-            html += buildA('💪', '实力碾压', '靠硬实力正常打进黑八。', a17, a17?a17.normalWins+' 次':'');
-            html += buildA('🔫', '快枪手', '赢局平均耗时最短(满3局)。', a18, a18?fTime(a18v):'');
-            html += buildA('🐌', '折磨王', '赢局平均耗时最长(满3局)。', a19, a19?fTime(a19v):'');
-            html += buildA('🧛', '一生之敌', '对特定目标提款次数最多。', a20, a20?a20v+' 次':'');
-            
-            c.innerHTML = html;
-        }
-
-function renderH2H() {
+        function renderH2H() {
             let container = document.getElementById('h2h-list');
-            let sortedPlayers = [...appData.players].sort((a,b) => b.score - a.score);
+            let sortedPlayers = [...appData.players].sort((a,b) => b.wins - a.wins);
             let html = '';
-            let fTime = (s) => isNaN(s) || s === 0 ? '--' : `${Math.floor(s/60)}分${s%60}秒`;
 
             sortedPlayers.forEach(p => {
                 let matchesInvolved = appData.matches.filter(m => m.p1 === p.id || m.p2 === p.id);
                 if(matchesInvolved.length === 0) return;
                 
-let oppStats = {}; 
+                let oppStats = {}; 
                 matchesInvolved.forEach(m => {
                     let oppId = m.p1 === p.id ? m.p2 : m.p1;
-                    // 新增了 ptsEarned 用于记录从该对手身上赢取的分数
-                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0, dur: 0, ptsEarned: 0 };
+                    if(!oppStats[oppId]) oppStats[oppId] = { w: 0, l: 0 };
                     if(m.winner === p.id) {
                         oppStats[oppId].w++;
-                        oppStats[oppId].ptsEarned += (m.earnedPoints || 0); // 累加赢取的分数
                     } else {
                         oppStats[oppId].l++;
                     }
-                    oppStats[oppId].dur += (m.duration || 0); 
                 });
 
                 let tMatch = p.wins + p.losses; 
                 let tWinPct = tMatch===0 ? 0 : Math.round((p.wins/tMatch)*100);
                 let tLosePct = tMatch===0 ? 0 : Math.round((p.losses/tMatch)*100);
-                let pTotalSec = matchesInvolved.reduce((sum, m) => sum + (m.duration || 0), 0);
-                let pAvgSec = tMatch > 0 ? Math.floor(pTotalSec / tMatch) : 0;
                 
                 let oppHtml = '';
                 for(let oppId in oppStats) {
@@ -1982,129 +878,53 @@ let oppStats = {};
                     let t = st.w + st.l; 
                     let pPct = t===0?50:Math.round((st.w/t)*100); 
                     let oPct = t===0?50:Math.round((st.l/t)*100);
-                    let oppAvg = t > 0 ? Math.floor(st.dur / t) : 0;
-                    // 计算赢取的分数占自己总分的百分比
-                    let ptsPct = p.score > 0 ? Math.round((st.ptsEarned / p.score) * 100) : 0;
                     
-// ================================================================================
-                    // 【控制台 10：1V1 恩怨簿 PK面板 UI像素级调参指南】 (小白专属)
-                    // [左侧进度条]：
-                    //   1. height: 10px; -> 控制彩色进度横条的粗细。
-                    //   2. border-radius: 5px; -> 控制进度条两端的圆角。
-                    // [中间大数字 (胜负总局)]：
-                    //   1. font-size: 42px; -> 控制巨大数字“6”、“4”和“(10)”的大小。
-                    //   2. font-size: 18px; -> 控制边上“(60%)”和“(40%)”的大小。
-                    //   3. color: #00ff00; -> 左边胜利的专属毒液绿 (严格匹配需求)。
-                    //   4. color: #e6004f; -> 右边失败的专属滴血红 (严格匹配需求)。
-                    //   5. color: #ffffff; -> 中间总局的纯白色。
-                    // [右侧头像与名字]：
-                    //   1. font-size: 16px; -> 控制头像下方“名字”的大小。
-                    //   2. margin: 0 0 6px 0 !important; -> 控制头像和下方名字的距离（6px）。
-                    // ================================================================================
-
                     oppHtml += `
                         <div class="h2h-opponent-row" style="display:flex; align-items:center; padding: 15px 12px; border-bottom: 1px dashed #333;">
-                            
-                            <!-- ==============================================
-                                 【左侧：数据统计区】
-                            =============================================== -->
                             <div style="flex: 1; display:flex; flex-direction:column; padding-right: 15px; justify-content: center;">
-                                
-                                <!-- 1. 顶部比例横条与赢取分数 -->
-                                <!-- ================================================================================
-                                     【控制台 21：1V1 赢取分数 调参区】(小白专属)
-                                     [控制目标]：对手进度条上方的“赢取 X分 (Y%)”
-                                     [参数修改]：
-                                     1. margin-bottom: 4px; -> 控制这行文字与下方彩色进度条的距离。
-                                     2. font-size: 22px; -> 控制“5分”这个大数字的大小。
-                                     3. color: var(--cy-yellow); -> 目前是发光黄色，可改为 #ffffff (纯白) 等。
-                                     4. text-shadow: 0 0 5px rgba(252,238,10,0.5); -> 数字的黄色发光特效。
-                                ================================================================================ -->
-                                <div style="display:flex; justify-content: flex-start; align-items: baseline; margin-bottom: 4px; font-family:'Noto Sans SC', sans-serif;">
-                                    <span style="font-size: 14px; color: #fff; font-weight: bold; margin-right: 6px;">赢取</span>
-                                    <span style="font-size: 22px; color: var(--cy-yellow); font-family: 'Oswald', sans-serif; font-weight: 900; margin-right: 6px; text-shadow: 0 0 5px rgba(252,238,10,0.5);">${st.ptsEarned}分</span>
-                                    <span style="font-size: 16px; color: var(--cy-yellow); font-family: 'Oswald', sans-serif; font-weight: bold;">(${ptsPct}%)</span>
-                                </div>
                                 <div style="width: 100%; height: 10px; background: #1a1a1a; border-radius: 5px; display: flex; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);">
                                     <div style="height:100%; width:${pPct}%; background:${p.color};"></div>
                                     <div style="height:100%; width:${100-pPct}%; background:${opp.color};"></div>
                                 </div>
                                 
-                                <!-- 2. 中间：巨型胜负数据 -->
                                 <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:'Oswald', sans-serif; font-weight:900; margin-bottom: 8px; line-height: 1;">
-                                    
-                                    <!-- 胜局百分比 与 胜局数 -->
                                     <div style="display:flex; align-items:baseline; color:#00ff00;">
                                         <span style="font-size: 18px; margin-right: 4px;">(${pPct}%)</span>
                                         <span style="font-size: 42px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${st.w}</span>
                                     </div>
-                                    
-                                    <!-- 总局数 -->
                                     <div style="color:#ffffff; font-size: 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 4px #000;">
                                         (${t})
                                     </div>
-                                    
-                                    <!-- 败局数 与 败局百分比 -->
                                     <div style="display:flex; align-items:baseline; color:#e6004f;">
                                         <span style="font-size: 42px; margin-right: 4px; text-shadow: 0 2px 5px rgba(230,0,79,0.4);">${st.l}</span>
                                         <span style="font-size: 18px;">(${oPct}%)</span>
                                     </div>
                                 </div>
-                                
-                                <!-- 3. 底部：时间统计 -->
-                                <div style="display:flex; justify-content:space-between; font-size: 11px; font-weight: bold; color:#aaa; font-family:'Noto Sans SC', sans-serif;">
-                                    <span>交战总时长: ${fTime(st.dur)}</span>
-                                    <span style="color:var(--cy-yellow)">场均: ${fTime(oppAvg)}</span>
-                                </div>
                             </div>
                             
-                            <!-- ==============================================
-                                 【右侧：对手头像与名字】
-                            =============================================== -->
                             <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
-                                <!-- 头像 (利用margin抹除原本左侧强制的偏移，实现居中) -->
                                 <div class="h2h-opp-frame" style="border-color: ${opp.color}; box-shadow: 0 0 10px ${opp.color}; margin: 0 0 6px 0 !important;">
                                     <img src="${opp.avatar}">
                                 </div>
-                                <!-- 名字居中白字 -->
                                 <div style="color:#fff; font-size: 16px; font-weight: 900; letter-spacing: 1px; text-align:center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">${opp.name}</div>
                             </div>
-                            
                         </div>`;
                 }
                 
                 html += `
                     <div class="player-h2h-section" style="--player-color: ${p.color};">
-<!-- ================================================================================
-                             【控制台 22：1V1 恩怨簿主视角大卡片 调参区】(小白专属)
-                             [结构]：完全复刻图2设计
-                             [参数修改]：
-                             1. font-size: 32px; -> 右上角黄色总分“11”的大小。
-                             2. font-size: 26px; -> 中间的巨大比分“6 (10) 4”的字体大小。
-                             3. color: var(--cy-green); -> 代表胜利的绿色，可自定义修改。
-                             4. color: var(--cy-red); -> 代表失败的红色。
-                             [特效说明]：中间数字自带 text-shadow 悬浮阴影，如果觉得太亮，可以删掉 text-shadow 属性。
-                        ================================================================================ -->
                         <div class="h2h-owner" style="align-items: stretch; padding: 12px 15px;">
                             <div class="h2h-owner-frame" style="box-shadow: 0 0 10px ${p.color}; margin-right: 15px; flex-shrink: 0;"><img src="${p.avatar}"></div>
-                            <div class="h2h-owner-info" style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
-                                <!-- 名字与总分 -->
+                            <div class="h2h-owner-info" style="display: flex; flex-direction: column; justify-content: center; flex: 1;">
                                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
                                     <div class="h2h-owner-name" style="font-size: 22px;">${p.name}</div>
-                                    <div class="h2h-owner-score" style="font-size: 32px; color: var(--cy-yellow); line-height: 1;">${p.score} <span style="font-size:16px;">分</span></div>
                                 </div>
-                                <!-- 胜负数据条 (图2重点：绿 白 红) -->
-                                <div style="text-align: center; font-family:'Oswald', sans-serif; font-weight:900; margin: 6px 0; letter-spacing: 1px;">
+                                <div style="text-align: center; font-family:'Oswald', sans-serif; font-weight:900; margin: 10px 0; letter-spacing: 1px;">
                                     <span style="color:var(--cy-green); font-size:14px; margin-right:4px;">(${tWinPct}%)</span>
                                     <span style="color:var(--cy-green); font-size:24px; margin-right:6px; text-shadow: 0 2px 5px rgba(0,255,0,0.4);">${p.wins}</span>
                                     <span style="color:#ffffff; font-size:24px; margin-right:6px; text-shadow: 0 2px 8px rgba(0,0,0,0.9);">(${tMatch})</span>
                                     <span style="color:var(--cy-red); font-size:24px; margin-right:4px; text-shadow: 0 2px 5px rgba(255,42,42,0.4);">${p.losses}</span>
                                     <span style="color:var(--cy-red); font-size:14px;">(${tLosePct}%)</span>
-                                </div>
-                                <!-- 时间统计 -->
-                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #aaa; font-weight: bold; font-family:'Noto Sans SC', sans-serif;">
-                                    <span>交战总时长: ${fTime(pTotalSec)}</span>
-                                    <span style="color:var(--cy-yellow);">场均: ${fTime(pAvgSec)}</span>
                                 </div>
                             </div>
                         </div>
@@ -2120,31 +940,27 @@ let oppStats = {};
             document.getElementById('tab-btn-' + tabName).classList.add('active'); document.getElementById('view-match-' + tabName).style.display = 'block';
             if(tabName === 'schedule') renderMatchSchedule(); 
         }
-        function toggleSort(type) { if(detailSortBy === type) detailSortAsc = !detailSortAsc; else { detailSortBy = type; detailSortAsc = false; } renderMatchDetails(); }
 
-function renderMatchDetails() {
+        function renderMatchDetails() {
             let logList = document.getElementById('match-log-list');
             let arr = appData.matches.map((m, idx) => ({ ...m, realId: idx + 1 }));
-            arr.sort((a, b) => { let vA = detailSortBy === 'id' ? a.realId : a.duration; let vB = detailSortBy === 'id' ? b.realId : b.duration; return detailSortAsc ? vA - vB : vB - vA; });
+            arr.reverse(); 
 
             logList.innerHTML = arr.map(m => {
                 let p1 = getPlayer(m.p1); let p2 = getPlayer(m.p2); if(!p1||!p2)return'';
                 let isP1Win = m.winner === p1.id;
-                let formatTime = m.duration > 0 ? `${Math.floor(m.duration/60)}分${m.duration%60}秒` : '--';
                 
-let wTagHtml = ''; let lTagHtml = '';
+                let wTagHtml = ''; let lTagHtml = '';
                 
-                // 【特效引擎】：专门用来解析标签并动态上色
                 let processTag = (t) => {
-                    let cssClass = 'tag-streak'; // 默认底色
-                    let inlineStyle = '';       // 动态内联样式
-                    let extraClass = '';        // 动态动画类
+                    let cssClass = 'tag-streak'; 
+                    let inlineStyle = '';       
+                    let extraClass = '';        
                     
-                    // 提取文本里的数字（比如从"连胜x3"里提取出3）
                     let numMatch = t.match(/x(\d+)/);
                     let num = numMatch ? parseInt(numMatch[1]) : 1;
 
-if (t === '首胜') { cssClass = 'tag-first'; }
+                    if (t === '首胜') { cssClass = 'tag-first'; }
                     else if (t === '终结连胜') { cssClass = 'tag-bounty'; }
                     else if (t === '一杆清台') { cssClass = 'tag-clean'; }
                     else if (t === '剃光头') { cssClass = 'tag-shutout'; }
@@ -2152,37 +968,31 @@ if (t === '首胜') { cssClass = 'tag-first'; }
                     else if (t === '被剃光头') { cssClass = 'tag-victim'; }
                     else if (t.includes('连胜')) {
                         cssClass = 'tag-streak';
-                        // 连胜特效逻辑：数字越大，光效越强！
-                        let glow = Math.min(num * 2, 10); // 光晕扩散度最大10
+                        let glow = Math.min(num * 2, 10); 
                         inlineStyle = `box-shadow: 0 0 ${glow}px var(--cy-cyan), 0 0 ${glow*2}px var(--cy-cyan); font-weight: 900;`;
-                        // 如果连胜超过3次，开启究极呼吸灯特效
                         if (num >= 3) { extraClass = 'tag-ultra-shine'; }
                     }
                     else if (t.includes('连败')) {
                         cssClass = 'tag-lose';
-                        // 连败特效逻辑：数字越大，颜色越黑，越阴沉！
-                        let darkness = Math.min(num * 0.15, 0.8); // 透明度变黑
+                        let darkness = Math.min(num * 0.15, 0.8); 
                         inlineStyle = `background: rgba(10,10,10,${0.2 + darkness}); color: rgba(255,255,255,${1 - darkness*0.5}); box-shadow: inset 0 0 ${num*3}px #000; border: 1px solid #222;`;
                     }
                     
                     return `<div class="match-tag ${cssClass} ${extraClass}" style="${inlineStyle}">${t}</div>`;
                 };
 
-                // 把解析过并加上特效的标签塞进去
                 if(m.wTags) m.wTags.forEach(t => wTagHtml += processTag(t));
                 if(m.lTags) m.lTags.forEach(t => lTagHtml += processTag(t));                
                 let p1Tags = isP1Win ? wTagHtml : lTagHtml;
                 let p2Tags = !isP1Win ? wTagHtml : lTagHtml;
 
-return `
+                return `
                     <div class="match-log-item" style="flex-direction: column; align-items: stretch;">
                         <div class="log-vs">
-                            <!-- 左侧玩家 P1 -->
                             <div style="display:flex; align-items:center; justify-content:flex-end; flex:1; min-width:0; gap:5px;">
                                 <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-end;">${p1Tags}</div>
                                 <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
                                     <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
-                                        <!-- 核心修改：套上防溢出相框 -->
                                         <div class="log-avatar-frame" style="border-color:${p1.color}; ${!isP1Win?'filter:grayscale(100%);':''}">
                                             <img src="${p1.avatar}">
                                         </div>
@@ -2192,18 +1002,14 @@ return `
                                 </div>
                             </div>
                             
-                            <!-- 中间 VS 与 耗时 -->
                             <div style="display:flex; flex-direction:column; align-items:center; margin:0 8px; flex-shrink:0;">
                                 <div style="font-size:14px; color:var(--cy-yellow); font-weight:900; margin-bottom:4px; font-family:'Noto Sans SC', sans-serif; text-shadow: 0 0 5px rgba(252,238,10,0.5);">第${m.realId}局</div>
-                                <div style="font-size:13px; color:white; font-family:'Oswald', sans-serif; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:10px; margin-bottom:4px; border:1px solid #333;">${formatTime}</div>
                                 <div style="font-size:14px; color:white; font-weight:900; font-family:'Oswald', sans-serif; letter-spacing:1px;">VS</div>
                             </div>
                             
-                            <!-- 右侧玩家 P2 -->
                             <div style="display:flex; align-items:center; justify-content:flex-start; flex:1; min-width:0; gap:5px;">
                                 <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
                                     <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
-                                        <!-- 核心修改：套上防溢出相框 -->
                                         <div class="log-avatar-frame" style="border-color:${p2.color}; ${isP1Win?'filter:grayscale(100%);':''}">
                                             <img src="${p2.avatar}">
                                         </div>
@@ -2211,21 +1017,9 @@ return `
                                     </div>
                                     <div style="font-size:12px; font-weight:bold; color:${!isP1Win?'#fff':'#666'}; margin-top:5px; max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;">${p2.name}</div>
                                 </div>
-<div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start;">${p2Tags}</div>
+                                <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start;">${p2Tags}</div>
                             </div>
                         </div>
-                        
-                        <!-- ================================================================================
-                             【控制台 12：结算详情牌 调参区】
-                             1. color: #ccc; -> 公式文字颜色
-                             2. font-size: 12px; -> 公式文字大小
-                             3. margin-top: 12px; -> 虚线距离上方对战头像的距离
-                        ================================================================================ -->
-                        ${m.scoreFormula ? `
-                        <div style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.15); font-size: 12px; color: #ccc; text-align: center; font-weight: bold; font-family:'Noto Sans SC', sans-serif;">
-                            <span style="color:var(--cy-cyan);">📋 结算详情：</span>${m.scoreFormula}
-                        </div>` : ''}
-                        
                     </div>`;
             }).join('');
         }
@@ -2234,50 +1028,42 @@ return `
             let tbody = document.getElementById('schedule-tbody'); let grouped = {};
             appData.matches.forEach((m, idx) => {
                 let d = new Date(m.ts).toLocaleDateString();
-                if(!grouped[d]) grouped[d] = { indices: [], totalDur: 0 };
-                grouped[d].indices.push(idx + 1); grouped[d].totalDur += (m.duration || 0);
+                if(!grouped[d]) grouped[d] = { indices: [] };
+                grouped[d].indices.push(idx + 1);
             });
             let html = '';
             for(let date in grouped) {
                 let data = grouped[date]; let count = data.indices.length; let range = `${Math.min(...data.indices)}~${Math.max(...data.indices)}`;
-                let fHms = (sec) => `${Math.floor(sec/3600)}:${Math.floor((sec%3600)/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
-                html += `<tr><td>${date}</td><td>${range}</td><td>${fHms(data.totalDur)}</td><td>${fHms(count>0?Math.floor(data.totalDur/count):0)}</td></tr>`;
+                html += `<tr><td>${date}</td><td>${range}</td><td>${count} 局</td></tr>`;
             }
-            tbody.innerHTML = html || '<tr><td colspan="4" style="color:#666;">暂无对战数据</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="3" style="color:#666;">暂无对战数据</td></tr>';
         }
 
-function exportExcel() {
+        function exportExcel() {
             if(typeof XLSX === 'undefined') return alert("Excel 组件加载中，请稍后。");
             let wb = XLSX.utils.book_new();
             
-            let matchData = [["局数", "时间", "胜者", "败者", "获胜方式", "耗时(秒)"]];
+            let matchData = [["局数", "时间", "胜者", "败者", "获胜方式"]];
             let tMap = { 'normal': '正常', 'clean': '清台', 'shutout': '剃头', 'clean_shutout': '清台+剃头', 'foul': '失误' };
             appData.matches.forEach((m, i) => {
                 let w = getPlayer(m.winner); let l = getPlayer(m.winner===m.p1?m.p2:m.p1);
-                matchData.push([i+1, new Date(m.ts).toLocaleString(), w?w.name:'', l?l.name:'', tMap[m.type]||'未知', m.duration||0]);
+                matchData.push([i+1, new Date(m.ts).toLocaleString(), w?w.name:'', l?l.name:'', tMap[m.type]||'未知']);
             });
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(matchData), "对战明细");
 
-            let pData = [["排名", "姓名", "级别", "总积分", "胜局", "负局", "历史最高连胜", "清台次数", "专属颜色代码"]];
-            [...appData.players].sort((a,b)=>b.score-a.score).forEach((p, i) => pData.push([i+1, p.name, p.level==='high'?'高手':'进阶', p.score, p.wins, p.losses, p.maxWinStreak, p.cleanWins, p.color]));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pData), "积分排行");
+            let pData = [["排名", "姓名", "级别", "胜局", "负局", "历史最高连胜", "清台次数", "专属颜色代码"]];
+            [...appData.players].sort((a,b)=>b.wins-a.wins).forEach((p, i) => pData.push([i+1, p.name, p.level==='high'?'高手':'进阶', p.wins, p.losses, p.maxWinStreak, p.cleanWins, p.color]));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pData), "对战排行");
 
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["!! 请勿修改此表内容，用于系统一键还原 !!"], [JSON.stringify(appData)]]), "SYSTEM_BACKUP");
             
-            // ----------------------------------------------------
-            // 新增逻辑：动态生成“黑八数据-XX（年）-XX（月）-XX（日）-XX局”的文件名
-            // ----------------------------------------------------
             let now = new Date();
             let yyyy = now.getFullYear();
-            // 月份和日期如果是个位数，自动在前面补0 (例如 5月 变成 05)
             let mm = String(now.getMonth() + 1).padStart(2, '0');
             let dd = String(now.getDate()).padStart(2, '0');
-            let totalMatches = appData.matches.length; // 自动获取当前打了多少局
+            let totalMatches = appData.matches.length; 
             
-            // 拼接出最终的文件名格式
             let exportFilename = `黑八数据-${yyyy}-${mm}-${dd}-${totalMatches}局.xlsx`;
-            
-            // 导出并下载文件
             XLSX.writeFile(wb, exportFilename);
         }
 
@@ -2293,7 +1079,7 @@ function exportExcel() {
                 if(cell && cell.v) {
                     try {
                         let parsed = JSON.parse(cell.v);
-                        if(parsed && parsed.players && parsed.rules) {
+                        if(parsed && parsed.players) {
                             appData = parsed; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("从 Excel 备份还原成功！");
                         } else { alert("文件数据结构损坏。"); }
                     } catch(err) { alert("JSON解析失败！"); }
@@ -2303,9 +1089,6 @@ function exportExcel() {
             reader.readAsArrayBuffer(file);
         }
 
-// ==============================================================================
-        // 新增功能：轮次区间切割器 专属逻辑
-        // ==============================================================================
         function addCustomSplit() {
             let val = parseInt(document.getElementById('split-match-num').value);
             if(isNaN(val) || val <= 1) return alert("请输入大于 1 的有效局数！");
@@ -2315,9 +1098,9 @@ function exportExcel() {
             if(appData.customSplits.includes(val)) return alert("这局已经是切割点了！");
             
             appData.customSplits.push(val);
-            appData.customSplits.sort((a,b) => a - b); // 确保切割点从小到大排好
+            appData.customSplits.sort((a,b) => a - b); 
             
-            document.getElementById('split-match-num').value = ''; // 清空输入框
+            document.getElementById('split-match-num').value = ''; 
             saveStateToHistory(); saveLocalAndSync();
             renderSettingsSplits(); updateAllUI();
             alert(`✅ 切割成功！从第 ${val} 局开始已划分为新的轮次。\n去顶部的【当前数据视图】点击看看吧！`);
@@ -2345,72 +1128,8 @@ function exportExcel() {
             `).join('');
         }
 
-
-// ==============================================================================
-        // 新增功能：历史对局时间修改器 专属逻辑
-        // ==============================================================================
-        function updateMatchEditDropdown() {
-            let select = document.getElementById('edit-match-select');
-            if(!select) return;
-            let opts = `<option value="-1">请选择要修改的对局...</option>`;
-            appData.matches.forEach((m, i) => {
-                let p1 = getPlayer(m.p1); let p2 = getPlayer(m.p2);
-                let name1 = p1 ? p1.name : '未知'; let name2 = p2 ? p2.name : '未知';
-                // 下拉菜单显示：第X局 - [张三 VS 李四]
-                opts += `<option value="${i}">第 ${i+1} 局 - [${name1} VS ${name2}]</option>`;
-            });
-            select.innerHTML = opts;
-            document.getElementById('edit-match-area').style.display = 'none';
-        }
-
-        function loadMatchForEdit() {
-            let idx = parseInt(document.getElementById('edit-match-select').value);
-            let area = document.getElementById('edit-match-area');
-            if(idx === -1) { area.style.display = 'none'; return; }
-            
-            let m = appData.matches[idx];
-            document.getElementById('edit-match-duration').value = m.duration || 0; // 填入旧的耗时
-
-            // 将时间戳转换为 datetime-local 认识的格式 (YYYY-MM-DDThh:mm)
-            let d = new Date(m.ts);
-            let pad = (n) => String(n).padStart(2, '0');
-            let ds = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-            document.getElementById('edit-match-time').value = ds;
-
-            area.style.display = 'block'; // 显示修改面板
-        }
-
-        function saveMatchEdit() {
-            let idx = parseInt(document.getElementById('edit-match-select').value);
-            if(idx === -1) return;
-            
-            let dur = parseInt(document.getElementById('edit-match-duration').value);
-            let tsStr = document.getElementById('edit-match-time').value;
-
-            if(isNaN(dur) || dur < 0) return alert("耗时必须是大于等于0的数字！");
-            if(!tsStr) return alert("请选择有效的时间！");
-
-            // 覆盖旧数据
-            appData.matches[idx].duration = dur;
-            appData.matches[idx].ts = new Date(tsStr).getTime();
-
-            // 保存到硬盘、同步给其他人、并刷新界面
-            saveStateToHistory();
-            saveLocalAndSync();
-            updateAllUI();
-            alert(`✅ 第 ${idx+1} 局的数据已成功修改！\n相关的风云榜(场均、最长最短时间)、对局详情等已自动同步更新！`);
-        }
-
         function renderSettings() {
-updateMatchEditDropdown(); // 刷新对局时间修改器的下拉菜单
-renderSettingsSplits();    // 刷新切割点列表
-            document.getElementById('rule-hh').value = appData.rules.hh; document.getElementById('rule-ll').value = appData.rules.ll;
-            document.getElementById('rule-hl').value = appData.rules.hl; document.getElementById('rule-lh').value = appData.rules.lh;
-            document.getElementById('rule-streak').value = appData.rules.streakThreshold; document.getElementById('rule-bounty').value = appData.rules.bounty; document.getElementById('rule-reduced').value = appData.rules.reduced;
-document.getElementById('rule-streak-inc').value = appData.rules.streakBonusInc !== undefined ? appData.rules.streakBonusInc : 0.5;
-            document.getElementById('rule-bounty-inc').value = appData.rules.bountyInc !== undefined ? appData.rules.bountyInc : 1;
-            document.getElementById('rule-clean').value = appData.rules.cleanBonus; document.getElementById('rule-shutout').value = appData.rules.shutoutBonus;
-            
+            renderSettingsSplits();    
             document.getElementById('player-edit-list').innerHTML = appData.players.map(p => `
                 <div style="background:rgba(255,255,255,0.05); padding:12px; margin-bottom:10px; border-radius:4px; border-left:4px solid ${p.color};">
                     <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
@@ -2423,98 +1142,9 @@ document.getElementById('rule-streak-inc').value = appData.rules.streakBonusInc 
                 </div>`).join('');
         }
 
-// ==============================================================================
-        // 【时光机重算引擎】：当规则发生改变时，自动从第1局开始重新推演计算所有分数！
-        // ==============================================================================
-        function recalculateAllScores() {
-            // 1. 重置所有玩家的积分状态，剥离曾经获得的分数，回到初始底分
-            appData.players.forEach(p => {
-                if (p.score === undefined) p.score = 0;
-                if (p.totalScoreEarned === undefined) p.totalScoreEarned = 0;
-                p.score -= p.totalScoreEarned; 
-                p.totalScoreEarned = 0; 
-                p.tempStreak = 0; // 用于模拟历史推演的临时连胜指示器
-            });
-
-            // 2. 像放电影一样，从第一局开始，根据新规则重新发奖金！
-            appData.matches.forEach(m => {
-                let p1 = appData.players.find(x => x.id === m.p1);
-                let p2 = appData.players.find(x => x.id === m.p2);
-                if(!p1 || !p2) return;
-                
-                let winner = (m.winner === p1.id) ? p1 : p2;
-                let loser = (m.winner === p1.id) ? p2 : p1;
-
-                let earnedPoints = 0;
-                let formulaBase = '';
-                let formulaBonus = '';
-
-                // A. 基础等级分
-                if(winner.level === 'high' && loser.level === 'high') { earnedPoints = Number(appData.rules.hh); formulaBase = `(高手赢高手) ${earnedPoints}`; }
-                else if(winner.level === 'low' && loser.level === 'low') { earnedPoints = Number(appData.rules.ll); formulaBase = `(低手赢低手) ${earnedPoints}`; }
-                else if(winner.level === 'high' && loser.level === 'low') { earnedPoints = Number(appData.rules.hl); formulaBase = `(高手赢低手) ${earnedPoints}`; }
-                else if(winner.level === 'low' && loser.level === 'high') { earnedPoints = Number(appData.rules.lh); formulaBase = `(低手爆冷高手) ${earnedPoints}`; }
-
-                // B. 连胜奖励系统 (根据推演的临时连胜计算)
-                let threshold = Number(appData.rules.streakThreshold);
-                if(winner.tempStreak >= threshold) {
-                    let overStreak = winner.tempStreak - threshold;
-                    let incX = Number(appData.rules.streakBonusInc) || 0;
-                    let redBonus = Number(appData.rules.reduced);
-                    let streakInc = overStreak * incX;
-                    earnedPoints += redBonus + streakInc;
-                    formulaBonus += ` + (连胜基础奖励) ${redBonus}` + (streakInc > 0 ? ` + (连胜递增奖励) ${streakInc}` : '');
-                }
-
-                // C. 终结赏金系统
-                if(loser.tempStreak >= threshold) {
-                    let overStreak = loser.tempStreak - threshold;
-                    let incY = Number(appData.rules.bountyInc) || 0;
-                    let currentDynamicBounty = Number(appData.rules.bounty) + (overStreak * incY);
-                    earnedPoints += currentDynamicBounty;
-                    formulaBonus += ` + (终结赏金) ${currentDynamicBounty}`;
-                }
-
-                // D. 附加分判定 (清台 / 剃光头)
-                let isClean = (m.type === 'clean' || m.type === 'clean_shutout');
-                let isShutout = (m.type === 'shutout' || m.type === 'clean_shutout');
-                if(isClean) { let cb = Number(appData.rules.cleanBonus); earnedPoints += cb; formulaBonus += ` + (一杆清台) ${cb}`; }
-                if(isShutout) { let sb = Number(appData.rules.shutoutBonus); earnedPoints += sb; formulaBonus += ` + (剃光头) ${sb}`; }
-
-                // E. 覆写该局历史真实的得分与公式！
-                m.earnedPoints = earnedPoints;
-                m.scoreFormula = `${formulaBase}${formulaBonus} = <span style="color:var(--cy-yellow); font-size:15px; font-family:'Oswald', sans-serif;">${earnedPoints} 分</span>`;
-
-                // F. 推进模拟进度
-                winner.score += earnedPoints;
-                winner.totalScoreEarned += earnedPoints;
-                winner.tempStreak++;
-                loser.tempStreak = 0;
-            });
-
-            // 3. 打扫战场，删除临时推演变量
-            appData.players.forEach(p => delete p.tempStreak);
-        }
-
-function saveRules() { 
-            appData.rules.hh = parseFloat(document.getElementById('rule-hh').value); appData.rules.ll = parseFloat(document.getElementById('rule-ll').value);
-            appData.rules.hl = parseFloat(document.getElementById('rule-hl').value); appData.rules.lh = parseFloat(document.getElementById('rule-lh').value);
-            appData.rules.streakThreshold = parseInt(document.getElementById('rule-streak').value); appData.rules.bounty = parseFloat(document.getElementById('rule-bounty').value); appData.rules.reduced = parseFloat(document.getElementById('rule-reduced').value);
-            appData.rules.streakBonusInc = parseFloat(document.getElementById('rule-streak-inc').value);
-            appData.rules.bountyInc = parseFloat(document.getElementById('rule-bounty-inc').value);
-            appData.rules.cleanBonus = parseFloat(document.getElementById('rule-clean').value); appData.rules.shutoutBonus = parseFloat(document.getElementById('rule-shutout').value);
-            
-            // 🚀 核心：修改规则后，立马调用我们刚写的引擎，重算所有历史战绩！
-            recalculateAllScores(); 
-            
-            saveStateToHistory(); 
-            saveLocalAndSync(); 
-            updateAllUI(); // 🚀 核心：重算完立刻刷新画面，让新分数马上显示出来！
-            alert("✅ 规则同步完成！系统已依据新规则，重新推演计算了所有历史积分！");
-        }
         function addPlayer(name="新选手", level="low", avatar="") {
             let id='p_'+Date.now()+Math.floor(Math.random()*1000); if(!avatar) avatar=`https://api.dicebear.com/7.x/notionists/svg?seed=${id}`;
-            let p={id,name,level,avatar,score:0,wins:0,losses:0,streak:0}; initPlayerStats(p); appData.players.push(p);
+            let p={id,name,level,avatar,wins:0,losses:0,streak:0}; initPlayerStats(p); appData.players.push(p);
             if(appData.table.length<2) appData.table.push(id); else appData.queue.push(id);
         }
         function addPlayerForm() { addPlayer(); saveStateToHistory(); saveLocalAndSync(); updateAllUI(); }
@@ -2526,53 +1156,33 @@ function saveRules() {
             saveStateToHistory(); saveLocalAndSync(); updateAllUI();
         }
         function resetGame() {
-            if(!confirm("严重警告：清空所有战绩、计时和成就记录？")) return;
-            appData.players.forEach(p => { p.score=0; p.wins=0; p.losses=0; p.streak=0; p.totalScoreEarned=0; p.maxWinStreak=0; p.maxLoseStreak=0; p.currentLoseStreak=0; p.normalWins=0; p.foulWins=0; p.bountyKills=0; p.timesBounty=0; p.upsetWins=0; p.sameLevelWins=0; p.cleanWins=0; p.shutoutWins=0; p.status='active';});
-            appData.matches = []; appData.currentMatchStartTime = null; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("战绩已全面重置！");
+            if(!confirm("严重警告：清空所有战绩记录？")) return;
+            appData.players.forEach(p => { p.wins=0; p.losses=0; p.streak=0; p.maxWinStreak=0; p.maxLoseStreak=0; p.currentLoseStreak=0; p.normalWins=0; p.foulWins=0; p.bountyKills=0; p.timesBounty=0; p.upsetWins=0; p.sameLevelWins=0; p.cleanWins=0; p.shutoutWins=0; p.status='active';});
+            appData.matches = []; saveStateToHistory(); saveLocalAndSync(); updateAllUI(); alert("战绩已全面重置！");
         }
         
-function joinRoom() { 
-            let r = document.getElementById('room-input').value.trim(); 
-            if(r && r !== appData.roomId) { 
-                appData.roomId = r; 
-                appData.timestamp = 0; 
-                document.getElementById('ui-room-id').innerText = r;
-                localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
-                connectMqtt(); // 移除了多余的参数，适配新的无脑智能同步系统
-                updateAllUI(); 
-            } 
-        }
-
-function connectMqtt() {
+        function connectMqtt() {
             if(mqttClient) mqttClient.end();
             document.getElementById('mqtt-status').innerHTML = '🟡 连接中';
             mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
             mqttClient.on('connect', () => { 
                 document.getElementById('mqtt-status').innerHTML = '<span style="color:var(--cy-cyan);">🟢 联机成功</span>'; 
-                // 订阅固定的房间号频道
                 mqttClient.subscribe(`esports_pool_game_ult_v4_${appData.roomId}`); 
-                
-                // 【核心同步机制1】：无论谁打开网页，一连上就立刻大声广播自己的数据和最后修改的时间！
                 broadcastState(); 
             });
             mqttClient.on('message', (t, msg) => {
                 try { 
                     let inc = JSON.parse(msg.toString()); 
-                    
-                    // 【核心同步机制2】：智能时间戳对比系统
                     if (inc.data) {
-if (inc.timestamp > appData.timestamp) { 
-                            // 别人的数据时间戳比我的新：说明我落后了，乖乖拿别人的数据覆盖我的
+                        if (inc.timestamp > appData.timestamp) { 
                             appData = inc.data; 
                             localStorage.setItem('esportsPoolDataUltV4', JSON.stringify(appData)); 
-                            saveStateToHistory(); // 修复4：把别人传来的新数据也塞进我的撤销库里，保证连环撤销不断裂！
+                            saveStateToHistory(); 
                             updateAllUI(); 
                             updateDispatchBtnUI(); 
                         } else if (inc.timestamp < appData.timestamp) {
-                            // 别人的数据时间戳没我的新：说明他是刚刚打开网页的小白，我立刻把我的最新数据强行发送给他，帮他同步！
                             broadcastState();
                         }
-                        // 如果时间相等，说明大家都同步了，不产生任何多余消耗。
                     } 
                 } catch(e){}
             });
@@ -2580,19 +1190,13 @@ if (inc.timestamp > appData.timestamp) {
         }
         function broadcastState() { if(mqttClient && mqttClient.connected) mqttClient.publish(`esports_pool_game_ult_v4_${appData.roomId}`, JSON.stringify({ timestamp: appData.timestamp, data: appData })); }
         
-function switchTab(index, elem) {
+        function switchTab(index, elem) {
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); elem.classList.add('active');
             document.querySelectorAll('.page-container').forEach(el=>el.classList.remove('active'));
-            // 把新增的 page-chart 加进第3个位置(索引2)
-            ['page-play','page-stats','page-chart','page-achieve','page-h2h','page-details','page-settings'].forEach((id,i)=>{if(i===index) document.getElementById(id).classList.add('active');});
-            // 索引发生了顺延，5是详情，2是图表
-            if(index === 2) { setTimeout(renderChart, 50); } // 延迟50毫秒等页面展开后，让系统量出屏幕有多宽再画图！
-            if(index === 5) { switchDetailTab('log'); } 
+            ['page-play','page-h2h','page-details','page-settings'].forEach((id,i)=>{if(i===index) document.getElementById(id).classList.add('active');});
+            if(index === 2) { switchDetailTab('log'); } 
         }
-        // 当手机旋转横屏或者改变大小时，自动重绘图表，防止拉伸变形
-        window.addEventListener('resize', () => { 
-            if(document.getElementById('page-chart').classList.contains('active')) renderChart(); 
-        });
+
         window.onload = init;
     </script>
 </body>
